@@ -17,23 +17,27 @@ list_t* empty_list(){
     return list;
 }
 
-void list_delete(list_t* list){
+void list_delete(list_t* list, void (*node_cleaner)(node_t*)){
     if(list == NULL) return;
 
-    node_t* prev = NULL;
-    node_t* curr = list->head;
-    while(curr != NULL){
-        prev = curr;
-        curr = curr->next;
-        free_node(prev);
+    node_t* tmp;
+    while(list->head != NULL){
+        tmp = list->head;
+        list->head = list->head->next;
+
+        if(node_cleaner == NULL)
+            free_node(tmp);
+        else node_cleaner(tmp);
     }
 
     free(list);
 }
 
 int list_push_front(list_t* list, node_t* node){
-    if (list == NULL || node == NULL)
-        return ENULLVAL;
+    if (list == NULL || node == NULL){
+        errno = EINVAL;
+        return -1;
+    }
  
     node->prev = NULL;
     node->next = NULL;
@@ -43,6 +47,7 @@ int list_push_front(list_t* list, node_t* node){
         list->tail = node;
     } else {
         node->next = list->head;
+        list->head->prev = node;
         list->head = node;
     }
     list->length++;
@@ -51,8 +56,10 @@ int list_push_front(list_t* list, node_t* node){
 }
 
 int list_push_back(list_t* list, node_t* node){
-    if (list == NULL || node == NULL)
-        return ENULLVAL;
+    if (list == NULL || node == NULL){
+        errno = EINVAL;
+        return -1;
+    }
  
     node->prev = NULL;
     node->next = NULL;
@@ -62,6 +69,7 @@ int list_push_back(list_t* list, node_t* node){
         list->tail = node;
     } else {
         node->prev = list->tail;
+        list->tail->next = node;
         list->tail = node;
     }
     list->length++;
@@ -71,8 +79,10 @@ int list_push_back(list_t* list, node_t* node){
 
 node_t* list_pop_front(list_t* list){
     // list must not be null or empty
-    if(list == NULL || list->length == 0)
+    if(list == NULL || list->length == 0){
+        errno = EINVAL;
         return NULL;
+    }
 
     node_t* node = list->head;
     
@@ -87,9 +97,11 @@ node_t* list_pop_front(list_t* list){
 
 node_t* list_pop_back(list_t* list){
     // list must not be null or empty
-    if(list == NULL || list->length == 0)
+    if(list == NULL || list->length == 0){
+        errno = EINVAL;
         return NULL;
-
+    }
+    
     node_t* node = list->tail;
     
     // removing first element from list
