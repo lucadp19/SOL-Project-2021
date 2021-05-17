@@ -57,6 +57,7 @@ int install_sig_handler(int* pipe, pthread_t* sig_handler_tid){
     sigemptyset(&sig_mask);
     sigaddset(&sig_mask, SIGINT);
     sigaddset(&sig_mask, SIGQUIT);
+    sigaddset(&sig_mask, SIGHUP);
 
     if((err = pthread_sigmask(SIG_BLOCK, &sig_mask, NULL)) != 0) {
         errno = err;

@@ -31,13 +31,43 @@ void* worker_thread(void* arg){
 
     int* pipe = (int*) arg;
 
-    sleep(5);
+    while(mode != CLOSE_SERVER){
+        long fd_client;
 
+        safe_pthread_mutex_lock(&request_queue_mtx);
+        if(mode != CLOSE_SERVER && request_queue->nelem == 0)
+            safe_pthread_cond_wait(&request_queue_nonempty, &request_queue_mtx);
+        
+        if(mode == CLOSE_SERVER) {
+            safe_pthread_mutex_unlock(&request_queue_mtx);
+            break;
+        } 
+        // request queue isn't empty
+        list_pop_front(request_queue, NULL, (void**)&fd_client);
+        safe_pthread_mutex_unlock(&request_queue_mtx);
+
+        // do something with client
+        worker_res_t result;
+        // TODO: actual worker code
+        result.code = 1; // close
+        result.fd_client = fd_client;
+        
+        if( writen(pipe[W_ENDP], &result, sizeof(worker_res_t)) == -1){
+            perror("Error writen");
+            return (void*)-1l;
+        }
+
+        #ifdef DEBUG
+            printf("> Job finished!\n");
+            fflush(stdout);
+        #endif
+    }
+    
     #ifdef DEBUG
         printf("Closing thread!\n");
     #endif
 
-    // close(pipe[W_ENDP]);
-    // pipe[W_ENDP] = -1;
+    close(pipe[W_ENDP]);
+    pipe[W_ENDP] = -1;
     return NULL;
 }
