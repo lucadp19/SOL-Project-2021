@@ -53,3 +53,7 @@ dkms.conf
 
 # VSCode folder
 .vscode/*
+
+# Bin directory except .keep file
+bin/*
+!bin/.keep
