@@ -4,6 +4,8 @@
 #include "hash/hashmap.h"
 #include "hash/hashtable.h"
 
+#define HASH_N_LIST 8
+
 typedef struct {
     node_t* current_pos;
     long current_list; 

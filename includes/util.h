@@ -9,6 +9,7 @@
 #include <ctype.h>
 
 #include <unistd.h>
+#include <pthread.h>
 
 // --------------- GENERAL --------------- //
 
@@ -24,6 +25,37 @@
  *      - if str is not a number it returns -3 and sets errno.
  */
 int str_to_long(const char* str, long* num_ptr);
+
+// ------------- MUTEX & COND ------------- //
+/**
+ * Locks the given mutex,
+ * or aborts the whole process if it does not succeed.
+ */
+void safe_pthread_mutex_lock(pthread_mutex_t* mtx);
+
+/**
+ * Unlocks the given mutex,
+ * or aborts the whole process if it does not succeed.
+ */
+void safe_pthread_mutex_unlock(pthread_mutex_t* mtx);
+
+/**
+ * Puts the thread in waiting on the given cv and mutex,
+ * or aborts the whole process if it does not succeed.
+ */
+void safe_pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mtx);
+
+/**
+ * Wakes a single thread sleeping on the given cv,
+ * or aborts the whole process if it does not succeed.
+ */
+void safe_pthread_mutex_signal(pthread_cond_t* cond);
+
+/**
+ * Wakes a single thread sleeping on the given cv,
+ * or aborts the whole process if it does not succeed.
+ */
+void safe_pthread_cond_broadcast(pthread_cond_t* cond);
 
 // ---------------- PIPES ---------------- //
 

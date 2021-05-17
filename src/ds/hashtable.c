@@ -1,7 +1,7 @@
 #include "hash/hashtable.h"
 
 static inline int _hashtbl_insert(hashtbl_t* table, long item){
-    long hash = (table->hash_funct(item)) % (table->nlist);
+    long hash = (table->hash_funct(item, table->nlist));
 
     // printf("hash: %ld\n", hash);
     if( list_push_back(table->list[hash], NULL, (void*)item) == -1) {
@@ -51,7 +51,7 @@ static int hashtbl_expand(hashtbl_t** table){
     return 0;
 }
 
-int hashtbl_init(hashtbl_t** table, int nlist, long (*hash_funct)(long)){
+int hashtbl_init(hashtbl_t** table, int nlist, long (*hash_funct)(long, long)){
     (*table) = NULL;
 
     if( ((*table) = (hashtbl_t*)malloc(sizeof(hashtbl_t))) == NULL){
@@ -109,7 +109,7 @@ int hashtbl_remove(hashtbl_t* table, long item){
         return -1;
     }
 
-    long hash = (table->hash_funct(item)) % (table->nlist);
+    long hash = (table->hash_funct(item, table->nlist));
 
     node_t* curr = table->list[hash]->head;
 

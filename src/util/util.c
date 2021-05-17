@@ -23,6 +23,51 @@ int str_to_long(const char* str, long* num_ptr){
     return -3;
 }
 
+void safe_pthread_mutex_lock(pthread_mutex_t* mtx){
+    int err;
+    if( (err = pthread_mutex_lock(mtx)) != 0){
+        errno = err;
+        perror("Error in pthread_mutex_lock");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void safe_pthread_mutex_unlock(pthread_mutex_t* mtx){
+    int err;
+    if( (err = pthread_mutex_unlock(mtx)) != 0){
+        errno = err;
+        perror("Error in pthread_mutex_unlock");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void safe_pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mtx){
+    int err;
+    if( (err = pthread_cond_wait(cond, mtx)) != 0){
+        errno = err;
+        perror("Error in pthread_cond_wait");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void safe_pthread_cond_signal(pthread_cond_t* cond){
+    int err;
+    if( (err = pthread_cond_signal(cond)) != 0){
+        errno = err;
+        perror("Error in pthread_cond_signal");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void safe_pthread_cond_broadcast(pthread_cond_t* cond){
+    int err;
+    if( (err = pthread_cond_broadcast(cond)) != 0){
+        errno = err;
+        perror("Error in pthread_cond_broadcast");
+        exit(EXIT_FAILURE);
+    }
+}
+
 int readn(long fd, void *buf, size_t size) {
     size_t left = size;
     int r;

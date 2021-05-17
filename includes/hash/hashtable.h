@@ -12,7 +12,7 @@ typedef struct {
     long nlist;
     long nelem;
     list_t** list;
-    long (*hash_funct)(long);
+    long (*hash_funct)(long, long);
 } hashtbl_t;
 
 /**
@@ -20,7 +20,7 @@ typedef struct {
  * On success returns 0 and returns the new hashtable in table,
  * on error returns -1 and sets errno.
  */
-int hashtbl_init(hashtbl_t** table, int nlist, long (*hash_funct)(long));
+int hashtbl_init(hashtbl_t** table, int nlist, long (*hash_funct)(long, long));
 
 /**
  * Inserts a new element into the hashtable table.
