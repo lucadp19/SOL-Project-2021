@@ -1,7 +1,6 @@
 # Compilation options
-CC 				= gcc
-CFLAGS 			+= -std=c99 -Wall -pedantic -g -I./includes
-THREAD_FLAGS 	= -lpthread
+CC 		= gcc
+CFLAGS 	+= -std=c99 -Wall -pedantic -g -I./includes -lpthread -D_POSIX_C_SOURCE=200112L
 
 # Directories
 SRC_DIR		= ./src
@@ -18,18 +17,26 @@ DYN_LINK = -L$(LIB_DIR) -Wl,-rpath,$(LIB_DIR)
 DEP_LIST = $(LIB_DIR)/libds.so $(OBJ_DIR)/util.o
 
 # 	---------------- Default rule ----------------	#
-all : $(BIN_DIR)/client
+all : $(BIN_DIR)/client $(BIN_DIR)/server
 
 # 	---------------- Debug macro -----------------  #
-DEBUG =
-
-debug : DEBUG = -D DEBUG
+debug : CFLAGS += -D DEBUG
 debug : all
 
 # 	------------------- Client -------------------	#
 
 $(BIN_DIR)/client : $(SRC_DIR)/client.c  $(INC_DIR)/client.h $(DEP_LIST)
-	$(CC) $(CFLAGS) $(DYN_LINK) $(DEBUG) -lds $< $(OBJ_DIR)/util.o -o $@
+	$(CC) $(CFLAGS) $(DYN_LINK) -lds $< $(DEP_LIST) -o $@
+
+# 	------------------- Server ------------------- 	#
+SERVER_SRC := $(wildcard $(SRC_DIR)/server/*.c)
+SERVER_OBJ := $(patsubst $(SRC_DIR)/server/*.c, $(OBJ_DIR)/server/*.o, $(SERVER_SRC))
+
+$(BIN_DIR)/server : $(SERVER_OBJ) $(DEP_LIST)
+	$(CC) $(CFLAGS) $(DYN_LINK) -lds $^ -o $@
+
+$(OBJ_DIR)/server/%.o : $(SRC_DIR)/server/%.c $(INC_DIR)/server.h $(DEP_LIST)
+	$(CC) $(CFLAGS) $< -c -o $@
 
 #	---------- Data Structures Library	----------  #
 
