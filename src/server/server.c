@@ -27,7 +27,11 @@ int main(int argc, char* argv[]){
 
     // ------- SIGNAL HANDLING ------- //
     pthread_t sig_handler_tid;
-    int sig_handler_pipe[2];
+    int* sig_handler_pipe;
+    if( (sig_handler_pipe = calloc(2, sizeof(int))) == NULL){
+        perror("Signal handler pipe allocation failed");
+        return -1;
+    }
     pipe_init(sig_handler_pipe);
 
     if( pipe(sig_handler_pipe) == -1){
@@ -35,15 +39,22 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
+    #ifdef DEBUG
+        printf("Sig_handler pipe r_endp: %d, w_endp: %d\n", sig_handler_pipe[0], sig_handler_pipe[1]);
+        fflush(stdout);
+    #endif
+
     if( install_sig_handler(sig_handler_pipe, &sig_handler_tid) == -1){
         perror("Error in installing signal handler");
         return -1;
     }
 
+   
     // ------ WORKER CREATION ------ //
-    pthread_t* worker_tids;
-    int** worker_pipes;
-
+    pthread_t* worker_tids = NULL;
+    int** worker_pipes = NULL;
+    
+    #if 0
     // allocating memory for worker thread ids
     if( (worker_tids = (pthread_t*)calloc(server_config.n_workers, sizeof(pthread_t))) == NULL){
         perror("Error in calloc for worker threads ids");
@@ -80,6 +91,7 @@ int main(int argc, char* argv[]){
         perror("Error in creating workers");
         return -1;
     }
+    #endif
 
 
     // other things
@@ -104,16 +116,18 @@ static int yield_all_threads(pthread_t sig_handler_tid, pthread_t worker_tids[])
         sig_handler_tid = -1;
     }
 
-    for(int i = 0; i < server_config.n_workers; i++){
-        if(worker_tids[i] == -1) continue;
+    if(worker_tids != NULL) {
+        for(int i = 0; i < server_config.n_workers; i++){
+            if(worker_tids[i] == -1) continue;
 
-        long ret_val;
-        if( (err = pthread_join(worker_tids[i], (void**)&ret_val)) == -1){
-            errno = err;
-            return -1;
-        } if(ret_val != 0){
-            errno = err;
-            return -1;
+            long ret_val;
+            if( (err = pthread_join(worker_tids[i], (void**)&ret_val)) == -1){
+                errno = err;
+                return -1;
+            } if(ret_val != 0){
+                errno = err;
+                return -1;
+            }
         }
     }
 

@@ -1,21 +1,17 @@
 #include "server.h"
 
+sigset_t sig_mask;
+
 void* sig_handler_thread(void* arg){
-    // install handlers and all 
-    sig_handler_arg_t* sigh_arg = (sig_handler_arg_t*)arg;
-    sigset_t* set_ptr = sigh_arg->set;
-    int* pipe = sigh_arg->pipe;
+    int* pipe = (int*)arg;
 
     #ifdef DEBUG
         printf("Hello, I'm the handler thread! ");
-        printf("Pipe w_endp: %d. ", pipe[W_ENDP]);
-        if(set_ptr == NULL)
-            printf("Set_ptr is NULL :(");
     #endif 
 
     while(true){
         int sig;
-        int err = sigwait(set_ptr, &sig);
+        int err = sigwait(&sig_mask, &sig);
         if(err != 0){
             errno = err;
             perror("Error in sigwait");
@@ -45,15 +41,14 @@ void* sig_handler_thread(void* arg){
     return NULL;
 }
 
-int install_sig_handler(int pipe[], pthread_t* sig_handler_tid){
+int install_sig_handler(int* pipe, pthread_t* sig_handler_tid){
     int err;
 
-    sigset_t mask;
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGINT);
-    sigaddset(&mask, SIGQUIT);
+    sigemptyset(&sig_mask);
+    sigaddset(&sig_mask, SIGINT);
+    sigaddset(&sig_mask, SIGQUIT);
 
-    if((err = pthread_sigmask(SIG_BLOCK, &mask, NULL)) != 0) {
+    if((err = pthread_sigmask(SIG_BLOCK, &sig_mask, NULL)) != 0) {
         errno = err;
         return -1;
     }
@@ -77,12 +72,7 @@ int install_sig_handler(int pipe[], pthread_t* sig_handler_tid){
     #endif
 
     // ------------ SIGHANDLER THREAD ------------ //
-    sig_handler_arg_t sigh_arg;
-    sigh_arg.set  = &mask;
-    sigh_arg.pipe[0] = pipe[0];
-    sigh_arg.pipe[1] = pipe[1];
-
-    if( (err = pthread_create(sig_handler_tid, NULL, sig_handler_thread, &sigh_arg)) != 0) {
+    if( (err = pthread_create(sig_handler_tid, NULL, sig_handler_thread, pipe)) != 0) {
         // perror("Error while creating sig_handler thread");
         errno = err;
         return -1;

@@ -20,6 +20,11 @@
 #define W_ENDP 1
 
 /**
+ * Takes an int vector with two positions and sets them both to -1.
+ */
+void pipe_init(int pipe[]);
+
+/**
  * Takes a string and converts it into a long.
  * On success returns 0 and num references the correct result,
  * whereas

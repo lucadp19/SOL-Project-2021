@@ -28,11 +28,6 @@ typedef struct {
 } server_config_t;
 
 typedef struct {
-    sigset_t* set; 
-    int pipe[2];
-} sig_handler_arg_t;
-
-typedef struct {
     int pipe[2];
 } worker_arg_t;
 
