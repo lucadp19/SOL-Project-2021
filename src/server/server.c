@@ -96,6 +96,24 @@ int main(int argc, char* argv[]){
 
     close_all_pipes(sig_handler_pipe, worker_pipes);
 
+    // freeing memory
+    if(sig_handler_pipe != NULL) {
+        free(sig_handler_pipe);
+        sig_handler_pipe = NULL;
+    }        
+    if(worker_tids != NULL) {
+        free(worker_tids);
+        worker_tids = NULL;
+    }
+    if(worker_pipes != NULL) {
+        for(int i = 0; i < server_config.n_workers; i++) {
+            free(worker_pipes[i]);
+            worker_pipes[i] = NULL;
+        }
+        free(worker_pipes);
+        worker_pipes = NULL;
+    }
+
     return 0;
 }
 

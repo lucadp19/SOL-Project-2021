@@ -6,7 +6,7 @@ void* sig_handler_thread(void* arg){
     int* pipe = (int*)arg;
 
     #ifdef DEBUG
-        printf("Hello, I'm the handler thread! ");
+        printf("Hello, I'm the handler thread!\n");
     #endif 
 
     while(true){

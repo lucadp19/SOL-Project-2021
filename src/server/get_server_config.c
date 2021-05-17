@@ -37,5 +37,7 @@ int get_server_config(const char* path_to_config){
         printf("Socket path: %s.\n", server_config.socket_path);
     #endif
 
+    fclose(config);
+
     return 0;
 }
