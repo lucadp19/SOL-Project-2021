@@ -32,13 +32,20 @@ typedef struct {
     int* pipe;
 } sig_handler_arg_t;
 
+typedef struct {
+    int* pipe;
+} worker_arg_t;
+
 // ------ GLOBAL VARIABLES ------ //
 extern server_config_t server_config;
 
 // --------- FUNCTIONS --------- //
 int get_server_config(const char* path_to_config);
+
 int install_sig_handler(int* pipe, pthread_t* sig_handler_tid);
 void* sig_handler_thread(void* arg);
+
+int install_workers(pthread_t* worker_ids, int** worker_pipes);
 void* worker_thread(void* arg);
 
 #endif

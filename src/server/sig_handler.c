@@ -7,7 +7,10 @@ void* sig_handler_thread(void* arg){
     int* pipe = sigh_arg->pipe;
 
     #ifdef DEBUG
-        printf("Hello, I'm the handler thread!\n");
+        printf("Hello, I'm the handler thread! ");
+        printf("Pipe w_endp: %d. ", pipe[W_ENDP]);
+        if(set_ptr == NULL)
+            printf("Set_ptr is NULL :(");
     #endif 
 
     while(true){
@@ -28,9 +31,12 @@ void* sig_handler_thread(void* arg){
                 fflush(stdout);
                 // waking sleeping threads
                 close(pipe[W_ENDP]);
+                pipe[W_ENDP] = -1;
                 return NULL;
             case SIGHUP:
                 // TODO: terminating *gently*
+                close(pipe[W_ENDP]);
+                pipe[W_ENDP] = -1;
                 return NULL;
 
             default: ;
