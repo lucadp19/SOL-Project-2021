@@ -10,6 +10,10 @@ static int yield_all_threads(pthread_t sig_handler_tid, pthread_t worker_tids[])
  * Closing all the open pipes.
  */
 static void close_all_pipes(int sig_handler_pipe[], int* worker_pipes[]);
+/**
+ * Unlinks socket.
+ */
+static void unlink_socket();
 
 int main(int argc, char* argv[]){ 
     if(argc > 2){
@@ -24,6 +28,8 @@ int main(int argc, char* argv[]){
         perror("Error in reading config file");
         return -1;
     }
+    // ----- MAX FILE DESCRIPTOR ----- //
+    long fd_max = -1;
 
     // ------- SIGNAL HANDLING ------- //
     pthread_t sig_handler_tid;
@@ -38,6 +44,7 @@ int main(int argc, char* argv[]){
         perror("Error in creating sig_handler_pipe");
         return -1;
     }
+    fd_max = sig_handler_pipe[R_ENDP];
 
     #ifdef DEBUG
         printf("Sig_handler pipe r_endp: %d, w_endp: %d\n", sig_handler_pipe[0], sig_handler_pipe[1]);
@@ -80,6 +87,7 @@ int main(int argc, char* argv[]){
             perror("Error in creating pipe");
             return -1;
         }
+        if(worker_pipes[i][R_ENDP] > fd_max) fd_max = worker_pipes[i][R_ENDP];
     }
 
     if( install_workers(worker_tids, worker_pipes) == -1){
@@ -87,8 +95,43 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    // other things
+    // --------- SOCKET ---------- //
+    long fd_listen = -1;
+    unlink_socket();
+    atexit(unlink_socket);
+
+    if( (fd_listen = socket(AF_UNIX, SOCK_STREAM, 0)) == -1){
+        perror("Error in socket creation");
+        return -1;
+    }
+
+    struct sockaddr_un sock_addr;
+    memset(&sock_addr, '0', sizeof(sock_addr));
+    strncpy(sock_addr.sun_path, server_config.socket_path, strlen(server_config.socket_path) + 1);
+    sock_addr.sun_family = AF_UNIX;
     
+    if( bind(fd_listen, (struct sockaddr*)&sock_addr, sizeof(sock_addr)) == -1){
+        perror("Error in socket binding");
+        return -1;
+    }
+    if( listen(fd_listen, SOMAXCONN) == -1){
+        perror("Error in socket binding");
+        return -1;
+    }
+    if(fd_listen > fd_max) fd_max = fd_listen;
+
+    // other things
+    // ...
+    // ...
+
+
+    // ------ CLOSING THINGS ------ //
+    
+    if(fd_listen != -1){
+        close(fd_listen);
+        fd_listen = -1;
+    }
+
     if( yield_all_threads(sig_handler_tid, worker_tids) == -1){
         perror("Error in thread yield");
         return -1;
@@ -161,4 +204,8 @@ static void close_all_pipes(int sig_handler_pipe[], int* worker_pipes[]){
                     close(worker_pipes[i][j]);
         }
     }
+}
+
+static void unlink_socket(){
+    unlink(server_config.socket_path);
 }

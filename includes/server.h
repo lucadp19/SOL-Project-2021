@@ -18,13 +18,11 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 
-#define MAX_SOCKET_PATH 120
-
 typedef struct {
     unsigned int n_workers;
     size_t max_space;
     unsigned int max_files;
-    char socket_path[MAX_SOCKET_PATH];
+    char socket_path[PATH_MAX];
 } server_config_t;
 
 typedef struct {

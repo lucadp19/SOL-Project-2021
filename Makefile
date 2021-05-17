@@ -67,6 +67,7 @@ $(OBJ_DIR)/util.o : $(SRC_DIR)/util/util.c $(INC_DIR)/util.h
 .PHONY: clean
 clean:
 	@echo "Removing object files and executables..."
+	@rm -f vgcore.*
 	@rm -rf $(OBJ_DIR)/*
 	@rm -rf $(BIN_DIR)/*
 	@echo "Cleaning complete!"
