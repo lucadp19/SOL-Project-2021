@@ -63,3 +63,7 @@ int writen(long fd, void *buf, size_t size) {
     return 1;
 }
 
+void pipe_init(int pipe[]){
+    pipe[0] = -1;
+    pipe[1] = -1;
+}

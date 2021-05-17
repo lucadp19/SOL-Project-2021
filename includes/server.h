@@ -29,11 +29,11 @@ typedef struct {
 
 typedef struct {
     sigset_t* set; 
-    int* pipe;
+    int pipe[2];
 } sig_handler_arg_t;
 
 typedef struct {
-    int* pipe;
+    int pipe[2];
 } worker_arg_t;
 
 // ------ GLOBAL VARIABLES ------ //

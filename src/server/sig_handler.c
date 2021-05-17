@@ -45,7 +45,7 @@ void* sig_handler_thread(void* arg){
     return NULL;
 }
 
-int install_sig_handler(int* pipe, pthread_t* sig_handler_tid){
+int install_sig_handler(int pipe[], pthread_t* sig_handler_tid){
     int err;
 
     sigset_t mask;
@@ -79,7 +79,8 @@ int install_sig_handler(int* pipe, pthread_t* sig_handler_tid){
     // ------------ SIGHANDLER THREAD ------------ //
     sig_handler_arg_t sigh_arg;
     sigh_arg.set  = &mask;
-    sigh_arg.pipe = pipe;
+    sigh_arg.pipe[0] = pipe[0];
+    sigh_arg.pipe[1] = pipe[1];
 
     if( (err = pthread_create(sig_handler_tid, NULL, sig_handler_thread, &sigh_arg)) != 0) {
         // perror("Error while creating sig_handler thread");

@@ -27,13 +27,8 @@ int main(int argc, char* argv[]){
 
     // ------- SIGNAL HANDLING ------- //
     pthread_t sig_handler_tid;
-    int* sig_handler_pipe;
-    if( (sig_handler_pipe = malloc(2 * sizeof(int))) == NULL){
-        perror("Error in malloc for sig_handler_pipe");
-        return -1;
-    }
-    sig_handler_pipe[0] = -1;
-    sig_handler_pipe[1] = -1;
+    int sig_handler_pipe[2];
+    pipe_init(sig_handler_pipe);
 
     if( pipe(sig_handler_pipe) == -1){
         perror("Error in creating sig_handler_pipe");
@@ -69,8 +64,7 @@ int main(int argc, char* argv[]){
             return -1;
         }
         // setting pipes to -1
-        worker_pipes[i][0] = -1;
-        worker_pipes[i][1] = -1;
+        pipe_init(worker_pipes[i]);
 
         if( pipe(worker_pipes[i]) == -1){
             perror("Error in creating pipe");

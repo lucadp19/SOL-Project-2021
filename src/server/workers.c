@@ -11,7 +11,9 @@ int install_workers(pthread_t worker_tids[], int** worker_pipes){
 
     for(int i = 0; i < server_config.n_workers; i++){
         worker_arg_t arg;
-        arg.pipe = worker_pipes[i];
+        arg.pipe[0] = worker_pipes[i][0];
+        arg.pipe[1] = worker_pipes[i][1];
+        
         #ifdef DEBUG
         printf("After worker_pipes[%d]", i);
         #endif
