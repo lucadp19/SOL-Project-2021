@@ -37,7 +37,7 @@ void* worker_thread(void* arg){
         printf("Closing thread!\n");
     #endif
 
-    close(pipe[W_ENDP]);
-    pipe[W_ENDP] = -1;
+    // close(pipe[W_ENDP]);
+    // pipe[W_ENDP] = -1;
     return NULL;
 }

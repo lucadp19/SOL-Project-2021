@@ -4,13 +4,14 @@
 #include "util.h"
 #include "node.h"
 #include "list.h"
+#include "hash.h"
  
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
 
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/select.h>
@@ -26,11 +27,23 @@ typedef struct {
 } server_config_t;
 
 typedef struct {
-    int* pipe;
-} worker_arg_t;
+    int code;
+    long fd_client;
+} worker_res_t;
+
+typedef enum {
+    ACCEPT_CONN,
+    REFUSE_CONN,
+    CLOSE_SERVER
+} server_mode_t;
 
 // ------ GLOBAL VARIABLES ------ //
 extern server_config_t server_config;
+extern server_mode_t mode;
+
+extern list_t* request_queue;
+extern pthread_mutex_t request_queue_mtx;
+extern pthread_cond_t request_queue_nonempty;
 
 // --------- FUNCTIONS --------- //
 int get_server_config(const char* path_to_config);

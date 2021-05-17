@@ -19,18 +19,28 @@ void* sig_handler_thread(void* arg){
         }
 
         switch (sig) {
+            // closing server immediately
             case SIGINT:
             case SIGQUIT:
-                // TODO: terminating now
-                // terminate = true;
+                mode = CLOSE_SERVER;
+
                 printf("\nReceived signal, closing server!\n");
                 fflush(stdout);
+
                 // waking sleeping threads
+                safe_pthread_cond_broadcast(&request_queue_nonempty);
+
+                // signaling to main thread
                 close(pipe[W_ENDP]);
                 pipe[W_ENDP] = -1;
+
                 return NULL;
+            
+            // blocking new connections
             case SIGHUP:
-                // TODO: terminating *gently*
+                mode = REFUSE_CONN;
+
+                // signaling to main thread
                 close(pipe[W_ENDP]);
                 pipe[W_ENDP] = -1;
                 return NULL;
