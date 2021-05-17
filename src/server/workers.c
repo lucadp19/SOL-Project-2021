@@ -10,23 +10,10 @@ int install_workers(pthread_t worker_tids[], int** worker_pipes){
     int err;
 
     for(int i = 0; i < server_config.n_workers; i++){
-        worker_arg_t arg;
-        arg.pipe[0] = worker_pipes[i][0];
-        arg.pipe[1] = worker_pipes[i][1];
-        
-        #ifdef DEBUG
-        printf("After worker_pipes[%d]", i);
-        #endif
-        if( (err = pthread_create(&(worker_tids[i]), NULL, worker_thread, (void*)&arg)) != 0){
+        if( (err = pthread_create(&(worker_tids[i]), NULL, worker_thread, (void*)(worker_pipes[i]))) != 0){
             errno = err;
             return -1;
         }
-        
-
-        #ifdef DEBUG
-            printf("Created worker %d\n", i);
-            fflush(stdout);
-        #endif        
     }
     return 0;
 }
@@ -42,7 +29,7 @@ void* worker_thread(void* arg){
         fflush(stdout);
     #endif
 
-    worker_arg_t* w_arg = (worker_arg_t*)arg;
+    int* pipe = (int*) arg;
 
     sleep(5);
 
@@ -50,7 +37,7 @@ void* worker_thread(void* arg){
         printf("Closing thread!\n");
     #endif
 
-    close(w_arg->pipe[W_ENDP]);
-    w_arg->pipe[W_ENDP] = -1;
+    close(pipe[W_ENDP]);
+    pipe[W_ENDP] = -1;
     return NULL;
 }

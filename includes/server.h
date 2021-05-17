@@ -28,7 +28,7 @@ typedef struct {
 } server_config_t;
 
 typedef struct {
-    int pipe[2];
+    int* pipe;
 } worker_arg_t;
 
 // ------ GLOBAL VARIABLES ------ //

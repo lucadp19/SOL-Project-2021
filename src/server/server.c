@@ -54,7 +54,6 @@ int main(int argc, char* argv[]){
     pthread_t* worker_tids = NULL;
     int** worker_pipes = NULL;
     
-    #if 0
     // allocating memory for worker thread ids
     if( (worker_tids = (pthread_t*)calloc(server_config.n_workers, sizeof(pthread_t))) == NULL){
         perror("Error in calloc for worker threads ids");
@@ -81,18 +80,12 @@ int main(int argc, char* argv[]){
             perror("Error in creating pipe");
             return -1;
         }
-
-        #ifdef DEBUG
-            printf("worker_pipes[%d][0] = %d, worker_pipes[%d][1] = %d", i, worker_pipes[i][0], i, worker_pipes[i][1]);
-        #endif
     }
 
     if( install_workers(worker_tids, worker_pipes) == -1){
         perror("Error in creating workers");
         return -1;
     }
-    #endif
-
 
     // other things
     
