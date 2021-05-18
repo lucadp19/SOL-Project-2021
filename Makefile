@@ -25,12 +25,13 @@ debug : all
 
 # 	------------------- Client -------------------	#
 
-$(BIN_DIR)/client : $(SRC_DIR)/client.c  $(INC_DIR)/client.h $(DEP_LIST)
-	$(CC) $(CFLAGS) $(DYN_LINK) -lds $< $(DEP_LIST) -o $@
+$(BIN_DIR)/client : $(SRC_DIR)/client.c  $(INC_DIR)/client.h $(DEP_LIST) $(LIB_DIR)/libapi.so
+	$(CC) $(CFLAGS) $(DYN_LINK) -lds $< $(DEP_LIST) $(LIB_DIR)/libapi.so -o $@
 
 # 	------------------- Server ------------------- 	#
+
 SERVER_SRC := $(wildcard $(SRC_DIR)/server/*.c)
-SERVER_OBJ := $(patsubst $(SRC_DIR)/server/*.c, $(OBJ_DIR)/server/*.o, $(SERVER_SRC))
+SERVER_OBJ := $(patsubst $(SRC_DIR)/server/%.c, $(OBJ_DIR)/server/%.o, $(SERVER_SRC))
 
 $(BIN_DIR)/server : $(SERVER_OBJ) $(DEP_LIST)
 	$(CC) $(CFLAGS) $(DYN_LINK) -lds $^ -o $@
@@ -38,30 +39,42 @@ $(BIN_DIR)/server : $(SERVER_OBJ) $(DEP_LIST)
 $(OBJ_DIR)/server/%.o : $(SRC_DIR)/server/%.c $(INC_DIR)/server.h $(DEP_LIST)
 	$(CC) $(CFLAGS) $< -c -o $@
 
+# 	----------------- Server API -----------------  #
+
+API_SRC := $(wildcard $(SRC_DIR)/api/*.c)
+API_OBJ := $(patsubst $(SRC_DIR)/api/%.c, $(OBJ_DIR)/api/%.o, $(API_SRC))
+API_INC := $(INC_DIR)/api.h $(wildcard $(INC_DIR)/api/*.h) 
+
+$(LIB_DIR)/libapi.so : $(API_OBJ) $(DEP_LIST)
+	$(CC) $(CFLAGS) -shared $(API_OBJ) -o $@
+
+$(OBJ_DIR)/api/%.o : $(SRC_DIR)/api/%.c $(API_INC) $(DEP_LIST)
+	$(CC) -fPIC $(CFLAGS) $< -c -o $@
+
 #	---------- Data Structures Library	----------  #
 
 $(LIB_DIR)/libds.so : $(OBJ_DIR)/list.o $(OBJ_DIR)/node.o $(OBJ_DIR)/hashtable.o $(OBJ_DIR)/hash.o
 	$(CC) $(CFLAGS) -shared $^ -o $@ 
 
 $(OBJ_DIR)/hash.o : $(SRC_DIR)/ds/hash.c $(INC_DIR)/hash.h $(OBJ_DIR)/hashtable.o $(OBJ_DIR)/hashmap.o
-	$(CC) $(CFLAGS) $< -c -fPIC -o $@
+	$(CC) -fPIC $(CFLAGS) $< -c -o $@
 
 $(OBJ_DIR)/hashmap.o : $(SRC_DIR)/ds/hashmap.c $(INC_DIR)/hash.h $(OBJ_DIR)/list.o
-	$(CC) $(CFLAGS) $< -c -fPIC -o $@
+	$(CC) -fPIC $(CFLAGS) $< -c -o $@
 
 $(OBJ_DIR)/hashtable.o : $(SRC_DIR)/ds/hashtable.c $(INC_DIR)/hash.h $(OBJ_DIR)/list.o
-	$(CC) $(CFLAGS) $< -c -fPIC -o $@
+	$(CC) -fPIC $(CFLAGS) $< -c -o $@
 
 $(OBJ_DIR)/list.o : $(SRC_DIR)/ds/list.c $(INC_DIR)/list.h $(OBJ_DIR)/node.o
-	$(CC) $(CFLAGS) $< -c -fPIC -o $@
+	$(CC) -fPIC $(CFLAGS) $< -c -o $@
 
 $(OBJ_DIR)/node.o : $(SRC_DIR)/ds/node.c $(INC_DIR)/node.h
-	$(CC) $(CFLAGS) $< -c -fPIC -o $@
+	$(CC) -fPIC $(CFLAGS) $< -c -o $@
 
 #  	----------------- Utilities ------------------  #
 
 $(OBJ_DIR)/util.o : $(SRC_DIR)/util/util.c $(INC_DIR)/util.h
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -fPIC -o $@
 	
 # Cleaning
 .PHONY: clean
