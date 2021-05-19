@@ -33,6 +33,7 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
 
     // setting waiting time
     struct timespec wait_time;
+    // no need to check because msec > 0 and &wait_time != NULL 
     set_timespec_from_msec(msec, &wait_time);
 
     // setting current time
@@ -75,22 +76,14 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
 }
 
 static int set_timespec_from_msec(int msec, struct timespec* req){
-    #ifdef DEBUG
-        printf("msec at the begin equals: %d\n", msec);
-    #endif
+    if(msec < 0 || req == NULL){
+        errno = EINVAL;
+        return -1;
+    }
 
     req->tv_sec = msec / 1000;
     msec = msec % 1000;
-
-    #ifdef DEBUG
-        printf("msec now equals: %d\n", msec);
-    #endif
-
     req->tv_nsec = msec * 1000;
-
-    #ifdef DEBUG
-        printf("tv_sec = %ld, tv_nsec = %ld", req->tv_sec, req->tv_nsec);
-    #endif
 
     return 0;
 }
