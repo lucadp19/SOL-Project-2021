@@ -1,6 +1,6 @@
-#include "util.h"
-#include "list.h"
-#include "node.h"
+#include "util/util.h"
+#include "util/list.h"
+#include "util/node.h"
 
 void print_list(list_t*);
 void cleaner(node_t*);
@@ -41,7 +41,7 @@ int main(){
 
     // printf("Deleting list.\n");
     // fflush(stdout);
-    list_delete(list, cleaner);
+    list_delete(&list, cleaner);
     printf("Yee! :)\n");
 }
 

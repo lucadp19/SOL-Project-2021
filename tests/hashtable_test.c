@@ -1,7 +1,7 @@
-#include "hash.h"
+#include "util/hash.h"
 
-static inline long hash(long val){
-    return val*258347 + 4; // random function
+static inline long hash(long val, long nelem){
+    return (val*258347 + 4) % nelem; // random function
 }
 
 int main(){
@@ -21,7 +21,7 @@ int main(){
         }
     }
 
-    for(int i = 0; i < 20; i++){
+    for(int i = 0; i < 192; i++){
         printf("Inserting %d\n", i);
         if( hashtbl_insert(&table, (long)i) == -1){
             perror("hashtbl_insert");
@@ -55,6 +55,7 @@ int main(){
 
     printf("Deleting table!\n");
     hashtbl_free(&table);
+    free(iter);
     printf("Yeee\n");
     
     return 0;

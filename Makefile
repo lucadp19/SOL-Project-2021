@@ -96,18 +96,24 @@ clean:
 	@rm -rf $(BIN_DIR)/*
 	@echo "Cleaning complete!"
 
-# Tests
-.PHONY: list_test test1 test2
+# ---------------- Personal Tests ---------------- 	#
+.PHONY: list_test hashtable_test
+
+PTEST_DEPS := $(LIB_DIR)/libutil.so
+PTEST_LIBS := $(DYN_LINK) -lutil
 
 hashtable_test : $(BIN_DIR)/hashtable_test
 
-$(BIN_DIR)/hashtable_test : $(TEST_DIR)/hashtable_test.c $(DEP_LIST)
-	$(CC) $(CFLAGS) $(DYN_LINK) $(DEBUG) -lds $< $(OBJ_DIR)/util.o -o $@
+$(BIN_DIR)/hashtable_test : $(TEST_DIR)/hashtable_test.c $(LIB_DIR)/libutil.so
+	$(CC) $(CFLAGS) $(PTEST_LIBS) $< -o $@
 
 list_test: $(BIN_DIR)/list_test
 
-$(BIN_DIR)/list_test: $(TEST_DIR)/list_test.c $(DEP_LIST)
-	$(CC) $(CFLAGS) $(DYN_LINK) $(DEBUG) -lds $< $(OBJ_DIR)/util.o -o $@
+$(BIN_DIR)/list_test: $(TEST_DIR)/list_test.c $(LIB_DIR)/libutil.so
+	$(CC) $(CFLAGS) $(PTEST_LIBS) $< -o $@
+
+# ---------------- Official Tests ----------------	#
+.PHONY : test1 test2
 
 test1:
 	@echo "Test1 has not been written yet :("
