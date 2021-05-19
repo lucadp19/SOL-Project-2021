@@ -12,16 +12,17 @@ void print_request_q(){
     node_t* curr = request_q->head;
 
     while(curr != NULL){
-        printf("%s: %d\n", curr->key, *(int*)curr->data);
+        printf("%s: %ld\n", curr->key, (long)curr->data);
         curr = curr->next;
     }
 }
 #endif
 
 void clean_req_node(node_t* node){
-    free(node->data);
     free(node);
 }
+
+static int add_to_current_time(long sec, long nsec, struct timespec* res);
 
 void cleanup(){
     #ifdef DEBUG
@@ -29,7 +30,7 @@ void cleanup(){
     #endif
     
     if(request_q != NULL)
-        list_delete(request_q, clean_req_node);
+        list_delete(&request_q, clean_req_node);
 }
 
 int main(int argc, char* argv[]){
@@ -63,6 +64,35 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
+    // try to connect and then disconnect from socket
+    int err;
+    struct timespec abstime;
+    
+    add_to_current_time(5, 0, &abstime);
+
+    if( (err = openConnection(conf.socket, 1000, abstime)) == -1){
+        perror("Connection failed");
+        return -1;
+    } else if( conf.print_to_stdout )
+        printf("Connected to %s!\n", conf.socket);
+
+    sleep(3);
+
+    if( (err = closeConnection(conf.socket)) == -1){
+        perror("Couldn't close connection");
+        return -1;
+    } else if( conf.print_to_stdout )
+        printf("Connection to %s closed!\n", conf.socket);
+
+    return 0;
+}
+
+static int add_to_current_time(long sec, long nsec, struct timespec* res){
+    // TODO: maybe check its result
+    clock_gettime(CLOCK_REALTIME, res);
+    res->tv_sec += sec;
+    res->tv_nsec += nsec;
+
     return 0;
 }
 
@@ -91,25 +121,15 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
 
             // -t sets time between requests
             case 't': {
-                node_t* time_node;
-                long* ptr_val;
+                long time;
 
-                if( (ptr_val = malloc(sizeof(long))) == NULL){
-                    perror("-t option malloc");
-                    return -1;
-                }
-                if(str_to_long(optarg, ptr_val) != 0){
+                if(str_to_long(optarg, &time) != 0){
                     perror("-t option str_to_long");
                     return -1;
                 }
 
-                if( (time_node = create_node("t", (void*)ptr_val)) == NULL){
-                    perror("-t option create_node");
-                    return -1;
-                }
-
-                if(list_push_back(request_list, time_node) != 0){
-                    // TODO: how to perror?
+                if(list_push_back(request_list, "t", (void*)time) != 0){
+                    perror("-t option list_push_back");
                     return -1;
                 }
                 break;
@@ -144,5 +164,12 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
 }
 
 void print_helper(){
-    printf("This helper has not been made yet :(\n");
+    // printf("This helper has not been made yet :(\n");
+    printf("A client application for the File Storage System.\n");
+    printf("Possible options:\n");
+    printf("\t-h \t\t\tPrints this helper.\n");
+    printf("\t-f <sock> \t\tSets socket name to <sock>. \033[0;31m This option must be set once and only once. \033[0m\n");
+    printf("\t-p \t\t\tIf set, every operation will be printed to stdout. \033[0;31m This option must be set at most once. \033[0m\n");
+    printf("\t-t <time> \t\tSets the waiting time (in milliseconds) between requests. Default is 0.\n");
+    printf("\n");
 }

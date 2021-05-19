@@ -6,5 +6,8 @@
 
 ## Server
 - Modify the config structure and function to use a "key : value" structure instead of having to write them in order
-- Implement main cycle for worker thread and exit conditions
 - Maybe enum type for worker thread results
+
+## Client
+- Implement other operations
+- Maybe read time increment from arguments (option -w for wait)...
