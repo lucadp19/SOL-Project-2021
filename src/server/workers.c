@@ -48,7 +48,15 @@ void* worker_thread(void* arg){
 
         // do something with client
         worker_res_t result;
+        // memsetting otherwise valgrind will complain
+        memset(&result, 0, sizeof(worker_res_t));
+
         // TODO: actual worker code
+        #ifdef DEBUG
+            printf("> THREAD: got request from fd %ld.\n", fd_client);
+            fflush(stdout);
+        #endif
+
         result.code = 1; // close
         result.fd_client = fd_client;
         

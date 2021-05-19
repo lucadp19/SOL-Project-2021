@@ -165,6 +165,7 @@ int main(int argc, char* argv[]){
     for(int i = 0; i < server_config.n_workers; i++)
         FD_SET(worker_pipes[i][R_ENDP], &set);
 
+
     // ------------------- MAIN LOOP -------------------- //
 
     while(mode != CLOSE_SERVER){
@@ -188,7 +189,7 @@ int main(int argc, char* argv[]){
                 }
 
                 #ifdef DEBUG
-                printf("New connection!\n");
+                printf("New connection! File descriptor: %ld.\n", fd_client);
                 #endif
 
                 // adding client to master set
@@ -200,13 +201,14 @@ int main(int argc, char* argv[]){
                     perror("Error while adding client to table");
                     return -1;
                 }
+
+                continue;
             }
 
             // termination signal from sig_handler thread
             if(i == sig_handler_pipe[R_ENDP] && mode == CLOSE_SERVER){
                 // waking up sleeping threads
                 safe_pthread_cond_broadcast(&request_queue_nonempty);
-                
                 break;
             }
 
@@ -216,6 +218,10 @@ int main(int argc, char* argv[]){
                 if(i != worker_pipes[j][R_ENDP]) continue;
 
                 // found the right pipe!
+                #ifdef DEBUG
+                    printf("Reading result from thread %d\n", i);
+                    fflush(stdout);
+                #endif
                 is_client_request = false;
                 // reading the result from thread
                 worker_res_t result;
@@ -223,7 +229,7 @@ int main(int argc, char* argv[]){
                     perror("Error while reading result from thread");
                     return -1;
                 }
-
+            
                 switch (result.code){
                     case 0: // success :)
                         FD_SET(result.fd_client, &set);
@@ -232,7 +238,7 @@ int main(int argc, char* argv[]){
 
                     case 1: // closing connection
                         #ifndef DEBUG
-                            printf("Closed connection!\n");
+                            printf("Closed connection with client %ld!\n", result.fd_client);
                             fflush(stdout);
                         #endif
                         if( hashtbl_remove(conn_client_table, result.fd_client) == -1){
@@ -252,12 +258,19 @@ int main(int argc, char* argv[]){
 
             // it's a client request
             long fd_client = i;
+
+            #ifdef DEBUG
+                printf("New request from client %ld!\n", fd_client);
+                fflush(stdout);
+            #endif
+
             // inserting it into the request queue
             safe_pthread_mutex_lock(&request_queue_mtx);
             if( list_push_back(request_queue, NULL, (void*)fd_client) == -1){
                 perror("Error while inserting new element in queue");
                 return -1;
             }
+            safe_pthread_cond_signal(&request_queue_nonempty);
             safe_pthread_mutex_unlock(&request_queue_mtx);
             // removing i from the select set
             FD_CLR(i, &set);
