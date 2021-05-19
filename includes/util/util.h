@@ -59,7 +59,7 @@ void safe_pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mtx);
  * Wakes a single thread sleeping on the given cv,
  * or aborts the whole process if it does not succeed.
  */
-void safe_pthread_mutex_signal(pthread_cond_t* cond);
+void safe_pthread_cond_signal(pthread_cond_t* cond);
 
 /**
  * Wakes a single thread sleeping on the given cv,
