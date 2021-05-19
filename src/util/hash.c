@@ -1,4 +1,4 @@
-#include "hash.h"
+#include "util/hash.h"
 
 int hash_iter_init(hash_iter_t* iter){
     if(iter == NULL) {

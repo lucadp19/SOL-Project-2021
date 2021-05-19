@@ -1,23 +1,10 @@
 #ifndef _SERVER_H
 #define _SERVER_H
 
-#include "util.h"
-#include "node.h"
-#include "list.h"
-#include "hash.h"
- 
-#include <unistd.h>
-#include <signal.h>
-#include <pthread.h>
-
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
-#include <sys/un.h>
+#include "util/util.h"
+#include "util/node.h"
+#include "util/list.h"
+#include "util/hash.h"
 
 typedef struct {
     unsigned int n_workers;

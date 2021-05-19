@@ -1,9 +1,9 @@
 #ifndef _HASHTABLE_H
 #define _HASHTABLE_H
 
-#include "util.h"
-#include "node.h"
-#include "list.h"
+#include "util/util.h"
+#include "util/node.h"
+#include "util/list.h"
 
 /**
  * An hashtable containing integer (long) values.

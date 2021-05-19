@@ -1,4 +1,4 @@
-#include "util.h"
+#include "util/util.h"
 
 int str_to_long(const char* str, long* num_ptr){
     if(str == NULL || strlen(str) == 0 || num_ptr == NULL){

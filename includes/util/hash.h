@@ -1,8 +1,8 @@
 #ifndef _HASH_H
 #define _HASH_H
 
-#include "hash/hashmap.h"
-#include "hash/hashtable.h"
+#include "util/hash/hashmap.h"
+#include "util/hash/hashtable.h"
 
 #define HASH_N_LIST 8
 

@@ -1,9 +1,9 @@
 #ifndef _CLIENT_H
 #define _CLIENT_H
 
-#include "util.h"
-#include "node.h"
-#include "list.h"
+#include "util/util.h"
+#include "util/node.h"
+#include "util/list.h"
 
 #include <unistd.h>
 #include <getopt.h>

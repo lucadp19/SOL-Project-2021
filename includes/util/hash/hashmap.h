@@ -1,9 +1,9 @@
 #ifndef _HASHMAP_H
 #define _HASHMAP_H
 
-#include "util.h"
-#include "node.h"
-#include "list.h"
+#include "util/util.h"
+#include "util/node.h"
+#include "util/list.h"
 
 /**
  * An hashmap mapping strings to generic void* values.

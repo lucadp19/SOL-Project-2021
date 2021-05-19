@@ -13,30 +13,41 @@ TEST_DIR	= ./tests
 # Dynamic linking
 DYN_LINK = -L$(LIB_DIR) -Wl,-rpath,$(LIB_DIR)
 
-# Dependency list for applications
-DEP_LIST = $(LIB_DIR)/libds.so $(OBJ_DIR)/util.o
+# Dependency list for client
 
 # 	---------------- Default rule ----------------	#
-all : $(BIN_DIR)/client $(BIN_DIR)/server
+
+all : create_dirs $(BIN_DIR)/client $(BIN_DIR)/server
 
 # 	---------------- Debug macro -----------------  #
+
 debug : CFLAGS += -D DEBUG
 debug : all
 
 # 	------------------- Client -------------------	#
 
-$(BIN_DIR)/client : $(SRC_DIR)/client.c  $(INC_DIR)/client.h $(DEP_LIST) $(LIB_DIR)/libapi.so
-	$(CC) $(CFLAGS) $(DYN_LINK) -lds $< $(DEP_LIST) $(LIB_DIR)/libapi.so -o $@
+CLIENT_DEPS = $(LIB_DIR)/libutil.so $(LIB_DIR)/libapi.so
+CLIENT_LIBS = $(DYN_LINK) -lutil -lapi
+
+$(BIN_DIR)/client : $(OBJ_DIR)/client.o
+	$(CC) $(CFLAGS) $(CLIENT_LIBS) $^ -o $@
+
+$(OBJ_DIR)/client.o : $(SRC_DIR)/client.c $(INC_DIR)/client.h $(CLIENT_DEPS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # 	------------------- Server ------------------- 	#
 
 SERVER_SRC := $(wildcard $(SRC_DIR)/server/*.c)
 SERVER_OBJ := $(patsubst $(SRC_DIR)/server/%.c, $(OBJ_DIR)/server/%.o, $(SERVER_SRC))
+SERVER_INC := $(INC_DIR)/server.h
 
-$(BIN_DIR)/server : $(SERVER_OBJ) $(DEP_LIST)
-	$(CC) $(CFLAGS) $(DYN_LINK) -lds $^ -o $@
+SERVER_DEPS := $(LIB_DIR)/libutil.so
+SERVER_LIBS := $(DYN_LINK) -lutil
 
-$(OBJ_DIR)/server/%.o : $(SRC_DIR)/server/%.c $(INC_DIR)/server.h $(DEP_LIST)
+$(BIN_DIR)/server : $(SERVER_OBJ)
+	$(CC) $(CFLAGS) $(SERVER_LIBS) $^ -o $@
+
+$(OBJ_DIR)/server/%.o : $(SRC_DIR)/server/%.c $(SERVER_INC) $(SERVER_DEPS)
 	$(CC) $(CFLAGS) $< -c -o $@
 
 # 	----------------- Server API -----------------  #
@@ -51,32 +62,32 @@ $(LIB_DIR)/libapi.so : $(API_OBJ) $(DEP_LIST)
 $(OBJ_DIR)/api/%.o : $(SRC_DIR)/api/%.c $(API_INC) $(DEP_LIST)
 	$(CC) -fPIC $(CFLAGS) $< -c -o $@
 
-#	---------- Data Structures Library	----------  #
+#	-------------- Utilities Library -------------  #
 
-$(LIB_DIR)/libds.so : $(OBJ_DIR)/list.o $(OBJ_DIR)/node.o $(OBJ_DIR)/hashtable.o $(OBJ_DIR)/hash.o
-	$(CC) $(CFLAGS) -shared $^ -o $@ 
+UTIL_SRC := $(wildcard $(SRC_DIR)/util/*.c) $(wildcard $(SRC_DIR)/util/*/*.c)
+UTIL_OBJ := $(patsubst $(SRC_DIR)/util/%.c, $(OBJ_DIR)/util/%.o, $(UTIL_SRC))
+UTIL_INC := $(patsubst $(SRC_DIR)/util/%.c, $(INC_DIR)/util/%.h, $(UTIL_SRC))
 
-$(OBJ_DIR)/hash.o : $(SRC_DIR)/ds/hash.c $(INC_DIR)/hash.h $(OBJ_DIR)/hashtable.o $(OBJ_DIR)/hashmap.o
-	$(CC) -fPIC $(CFLAGS) $< -c -o $@
+$(LIB_DIR)/libutil.so : $(UTIL_OBJ)
+	$(CC) $(CFLAGS) -shared $^ -o $@
 
-$(OBJ_DIR)/hashmap.o : $(SRC_DIR)/ds/hashmap.c $(INC_DIR)/hash.h $(OBJ_DIR)/list.o
-	$(CC) -fPIC $(CFLAGS) $< -c -o $@
+$(OBJ_DIR)/util/%.o : $(SRC_DIR)/util/%.c $(INC_DIR)/util/%.h  $(OBJ_DIR)/util/util.o
+	$(CC) $(CFLAGS) $< -c -fPIC -o $@
 
-$(OBJ_DIR)/hashtable.o : $(SRC_DIR)/ds/hashtable.c $(INC_DIR)/hash.h $(OBJ_DIR)/list.o
-	$(CC) -fPIC $(CFLAGS) $< -c -o $@
+$(OBJ_DIR)/util/hash/%.o :  $(SRC_DIR)/util/hash/%.c $(INC_DIR)/util/hash/%.h $(OBJ_DIR)/util/util.o
+	$(CC) $(CFLAGS) $< -c -fPIC -o $@
 
-$(OBJ_DIR)/list.o : $(SRC_DIR)/ds/list.c $(INC_DIR)/list.h $(OBJ_DIR)/node.o
-	$(CC) -fPIC $(CFLAGS) $< -c -o $@
+$(OBJ_DIR)/util/util.o : $(SRC_DIR)/util/util.c $(INC_DIR)/util/util.h
+	$(CC) $(CFLAGS) $< -c -fPIC -o $@
 
-$(OBJ_DIR)/node.o : $(SRC_DIR)/ds/node.c $(INC_DIR)/node.h
-	$(CC) -fPIC $(CFLAGS) $< -c -o $@
+#	--------------- Directory utils --------------	#
 
-#  	----------------- Utilities ------------------  #
-
-$(OBJ_DIR)/util.o : $(SRC_DIR)/util/util.c $(INC_DIR)/util.h
-	$(CC) $(CFLAGS) -c $< -fPIC -o $@
+.PHONY: create_dirs
+create_dirs:
+	@bash scripts/create_dirs.sh
 	
-# Cleaning
+# 	------------------ Cleaning ------------------	#
+
 .PHONY: clean
 clean:
 	@echo "Removing object files and executables..."

@@ -1,4 +1,4 @@
-#include "hash/hashtable.h"
+#include "util/hash/hashtable.h"
 
 static inline int _hashtbl_insert(hashtbl_t* table, long item){
     long hash = (table->hash_funct(item, table->nlist));

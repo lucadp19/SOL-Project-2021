@@ -2,8 +2,8 @@
 #define _LIST_H
 
 #include <stdlib.h>
-#include "node.h"
-#include "util.h"
+#include "util/node.h"
+#include "util/util.h"
 
 /** 
  * A doubly-linked list with pointers to both ends and a number-of-elements field.

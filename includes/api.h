@@ -1,7 +1,7 @@
 #ifndef _SERVER_API_H
 #define _SERVER_API_H
 
-#include "util.h"
+#include "util/util.h"
 
 /**
  * Takes a socket name, a time in milliseconds and an absolute time.

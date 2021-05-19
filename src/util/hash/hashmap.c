@@ -1,4 +1,4 @@
-#include "hash/hashmap.h"
+#include "util/hash/hashmap.h"
 
 static inline int _hashmap_insert(hashmap_t* map, const char* key, void* data){
     long hash = (map->hash_funct(key)) % (map->nlist);
