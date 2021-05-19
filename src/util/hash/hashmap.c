@@ -109,6 +109,7 @@ int hashmap_remove(hashmap_t* map, const char* key){
             else map->list[hash]->tail = NULL;
 
             free(curr);
+            map->list[hash]->nelem--;
             map->nelem--;
 
             return 0;
