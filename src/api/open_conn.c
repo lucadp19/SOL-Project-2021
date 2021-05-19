@@ -28,7 +28,7 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
     // initializing address for connection
     struct sockaddr_un sock_addr;
     memset(&sock_addr, '0', sizeof(sock_addr));
-    strncpy(sock_addr.sun_path, sockname, PATH_MAX);
+    strncpy(sock_addr.sun_path, sockname, strlen(sockname) + 1);
     sock_addr.sun_family = AF_UNIX;
 
     // setting waiting time
@@ -40,13 +40,13 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
     clock_gettime(CLOCK_REALTIME, &curr_time);
 
     // trying to connect
-    int err;
+    int err = -1;
     while( (err = connect(fd_sock, (struct sockaddr*)&sock_addr, sizeof(sock_addr))) == -1
             && curr_time.tv_sec < abstime.tv_sec ){
         #ifdef DEBUG
             printf("connect didn't succeed, trying again...\n");
         #endif
-
+            
         if( nanosleep(&wait_time, NULL) == -1){
             RESET_SOCK;
             return -1;
@@ -79,14 +79,18 @@ static int set_timespec_from_msec(int msec, struct timespec* req){
         printf("msec at the begin equals: %d\n", msec);
     #endif
 
-    req->tv_sec = msec % 1000;
-    msec = msec - 1000*req->tv_sec;
+    req->tv_sec = msec / 1000;
+    msec = msec % 1000;
 
     #ifdef DEBUG
         printf("msec now equals: %d\n", msec);
     #endif
 
     req->tv_nsec = msec * 1000;
+
+    #ifdef DEBUG
+        printf("tv_sec = %ld, tv_nsec = %ld", req->tv_sec, req->tv_nsec);
+    #endif
 
     return 0;
 }
