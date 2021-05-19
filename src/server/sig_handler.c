@@ -27,9 +27,6 @@ void* sig_handler_thread(void* arg){
                 printf("\nReceived signal, closing server!\n");
                 fflush(stdout);
 
-                // waking sleeping threads
-                safe_pthread_cond_broadcast(&request_queue_nonempty);
-
                 // signaling to main thread
                 close(pipe[W_ENDP]);
                 pipe[W_ENDP] = -1;

@@ -79,6 +79,18 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
+    // ---------- CLIENT TABLE --------- //
+    if( hashtbl_init(&conn_client_table, HASH_N_LIST, hash_funct) == -1){
+        perror("Error while creating hashtable");
+        return -1;
+    }
+
+    // --------- REQUEST QUEUE --------- //
+    if( (request_queue = empty_list()) == NULL){
+        perror("Error while creating new list");
+        return -1;
+    }
+
     // ------ WORKER CREATION ------ //
     pthread_t* worker_tids = NULL;
     int** worker_pipes = NULL;
@@ -142,18 +154,6 @@ int main(int argc, char* argv[]){
     }
     if(fd_listen > fd_max) fd_max = fd_listen;
 
-    // ---------- CLIENT TABLE --------- //
-    if( hashtbl_init(&conn_client_table, HASH_N_LIST, hash_funct) == -1){
-        perror("Error while creating hashtable");
-        return -1;
-    }
-
-    // --------- REQUEST QUEUE --------- //
-    if( (request_queue = empty_list()) == NULL){
-        perror("Error while creating new list");
-        return -1;
-    }
-
     // ------------ FD_SET ------------ //
     fd_set set, tmpset;
     // setting both sets to 0
@@ -203,8 +203,12 @@ int main(int argc, char* argv[]){
             }
 
             // termination signal from sig_handler thread
-            if(i == sig_handler_pipe[R_ENDP] && mode == CLOSE_SERVER)
+            if(i == sig_handler_pipe[R_ENDP] && mode == CLOSE_SERVER){
+                // waking up sleeping threads
+                safe_pthread_cond_broadcast(&request_queue_nonempty);
+                
                 break;
+            }
 
             // worker or client?
             bool is_client_request = true;
