@@ -20,8 +20,28 @@ node_t* create_node(const char* key, void* data){
 
 void free_node(node_t* node){
     if(node != NULL) {
-        free((void*)node->key);
-        free(node->data);
+        if(node->key)   free((void*)node->key);
+        if(node->data)  free(node->data);
+        free(node);
+    }
+}
+
+void free_node_and_key(node_t* node){
+    if(node != NULL) {
+        if(node->key)   free((void*)node->key);
+        free(node);
+    }
+}
+
+void free_node_and_data(node_t* node){
+    if(node != NULL) {
+        if(node->data)  free(node->data);
+        free(node);
+    }
+}
+
+void free_only_node(node_t* node){
+    if(node != NULL) {
         free(node);
     }
 }

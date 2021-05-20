@@ -24,4 +24,19 @@ node_t* create_node(const char* key, void* data);
  */
 void free_node(node_t* node);
 
+/**
+ * Deletes a node's key and the node itself.
+ */
+void free_node_and_key(node_t* node);
+
+/**
+ * Deletes a node's data and the node itself.
+ */
+void free_node_and_data(node_t* node);
+
+/**
+ * Deletes the node (but not the data or the key).
+ */
+void free_only_node(node_t* node);
+
 #endif
