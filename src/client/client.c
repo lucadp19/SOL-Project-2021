@@ -98,8 +98,9 @@ static void print_helper(){
     printf("\t-t <time> \t\tSets the waiting time (in milliseconds) between requests. Default is 0.\n");
     printf("\t-a <time> \t\tSets the time (in seconds) after which the app will stop attempting to connect to server. Default value is 0. \033[0;31m This option must be set at most once. \033[0m\n");
     printf("\t-w <dir>[,n=0] \t\tSends the content of the directory <dir> (and its subdirectories) to the server. If n is specified, exactly n files will be sent to the server.\n");
-    printf("\t-W <file>{,<file>}\tSends the files passed as arguments to the server.\n");
+    printf("\t-W <file>{,<files>}\tSends the files passed as arguments to the server.\n");
     printf("\t-D <dir>\t\t\tWrites into directory <dir> all the files expelled by the server app. \033[0;31m This option must follow one of -w or -W. \033[0m\n");
+    printf("\t-r <file>{,<files>}\tReads the files specified in the argument list from the server.\n");
     printf("\n");
 }
 
@@ -140,6 +141,19 @@ static void print_request_q(){
                 printf("-D %s\n", (char*)curr->data);
                 break;
             }
+            case 'r': {
+                list_t* args;
+                args = (list_t*)curr->data;
+                printf("-r");
+
+                node_t* curr = args->head;
+                while(curr != NULL){
+                    printf(" %s", curr->key);
+                    curr = curr->next;
+                }
+                printf("\n");
+                break;
+            }
         }
         curr = curr->next;
     }
@@ -166,6 +180,10 @@ static void clean_req_node(node_t* node){
             free(node);
             break;
         case 'D':
+            free(node);
+            break;
+        case 'r':
+            list_delete((list_t**)&(node->data), free_only_node);
             free(node);
             break;
     }

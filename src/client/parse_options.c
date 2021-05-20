@@ -5,7 +5,7 @@ static int comma_sep(list_t* list, char* arg);
 int parse_options(list_t* request_list, int argc, char* argv[]){
     int opt;
 
-    while( (opt = getopt(argc, argv, "hf:t:pa:w:W:D:")) != -1 ){
+    while( (opt = getopt(argc, argv, "hf:t:pa:w:W:D:r:")) != -1 ){
         switch(opt){
             
             // -h prints helper message
@@ -118,6 +118,28 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                     fprintf(stderr, "Error in parsing option -D.\n");
                     return -1;
                 }
+            }
+
+            // -r reads a list of files from server
+            case 'r': {
+                list_t* files;
+
+                if( (files = empty_list()) == NULL){
+                    perror("Malloc error");
+                    fprintf(stderr, "Error in parsing option -r.\n");
+                    return -1;
+                }
+
+                if( comma_sep(files, optarg) == -1){
+                    fprintf(stderr, "Error in parsing option -r.\n");
+                    return -1;
+                }
+
+                if( list_push_back(request_list, "r", (void*)files) == -1){
+                    perror("List push back error");
+                    return -1;
+                }
+                break;                
             }
 
             // -a option sets time to await before giving a timeout
