@@ -1,9 +1,11 @@
 #include "client.h"
 
+static int comma_sep(list_t* list, char* arg);
+
 int parse_options(list_t* request_list, int argc, char* argv[]){
     int opt;
 
-    while( (opt = getopt(argc, argv, "hf:t:pa:w:")) != -1 ){
+    while( (opt = getopt(argc, argv, "hf:t:pa:w:W:")) != -1 ){
         switch(opt){
             
             // -h prints helper message
@@ -51,6 +53,28 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 arg->n_files = files;
 
                 if(list_push_back(request_q, "w", (void*)arg) == -1){
+                    perror("List push back error");
+                    return -1;
+                }
+                break;
+            }
+
+            // -W sends a list of files to server
+            case 'W': {
+                list_t* files;
+
+                if( (files = empty_list()) == NULL){
+                    perror("Malloc error");
+                    fprintf(stderr, "Error in parsing option -W.\n");
+                    return -1;
+                }
+
+                if( comma_sep(files, optarg) == -1){
+                    fprintf(stderr, "Error in parsing option -W.\n");
+                    return -1;
+                }
+
+                if( list_push_back(request_list, "W", (void*)files) == -1){
                     perror("List push back error");
                     return -1;
                 }
@@ -125,3 +149,19 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
     return 0;
 }
 
+static int comma_sep(list_t* list, char* arg){
+    if(list == NULL){
+        errno = EINVAL;
+        return -1;
+    }
+
+    char* save;
+    char* token = strtok_r(arg, ",", &save);
+
+    while(token) {
+        if(list_push_back(list, token, NULL) == -1)
+            return -1;
+        token = strtok_r(NULL, ",", &save);
+    }
+    return 0;
+}
