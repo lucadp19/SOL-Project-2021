@@ -26,13 +26,17 @@ debug : all
 
 # 	------------------- Client -------------------	#
 
+CLIENT_SRC := $(wildcard $(SRC_DIR)/client/*.c)
+CLIENT_OBJ := $(patsubst $(SRC_DIR)/client/%.c, $(OBJ_DIR)/client/%.o, $(CLIENT_SRC))
+CLIENT_INC := $(INC_DIR)/client.h
+
 CLIENT_DEPS = $(LIB_DIR)/libutil.so $(LIB_DIR)/libapi.so
 CLIENT_LIBS = $(DYN_LINK) -lutil -lapi
 
-$(BIN_DIR)/client : $(OBJ_DIR)/client.o
+$(BIN_DIR)/client : $(CLIENT_OBJ)
 	$(CC) $(CFLAGS) $(CLIENT_LIBS) $^ -o $@
 
-$(OBJ_DIR)/client.o : $(SRC_DIR)/client.c $(INC_DIR)/client.h $(CLIENT_DEPS)
+$(OBJ_DIR)/client/%.o : $(SRC_DIR)/client/%.c $(CLIENT_INC) $(CLIENT_DEPS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # 	------------------- Server ------------------- 	#
