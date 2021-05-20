@@ -23,7 +23,7 @@ int str_to_long(const char* str, long* num_ptr){
     return -3;
 }
 
-int debug(const char* fmt, ...){
+int _debug(const char* fmt, ...){
     va_list argp;
     va_start(argp, fmt);
 
