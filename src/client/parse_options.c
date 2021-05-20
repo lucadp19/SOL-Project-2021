@@ -5,7 +5,7 @@ static int comma_sep(list_t* list, char* arg);
 int parse_options(list_t* request_list, int argc, char* argv[]){
     int opt;
 
-    while( (opt = getopt(argc, argv, "hf:t:pa:w:W:")) != -1 ){
+    while( (opt = getopt(argc, argv, "hf:t:pa:w:W:D:")) != -1 ){
         switch(opt){
             
             // -h prints helper message
@@ -107,6 +107,15 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                     break;
                 } else {
                     fprintf(stderr, "Error in parsing options: option -p can only be set once.\n");
+                    return -1;
+                }
+            }
+
+            // -D option sets directory in which to write files "expelled" by server app
+            case 'D': {
+                if(list_push_back(request_list, "D", (void*)optarg) == -1){
+                    perror("List push back error");
+                    fprintf(stderr, "Error in parsing option -D.\n");
                     return -1;
                 }
             }

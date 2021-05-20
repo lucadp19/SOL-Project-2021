@@ -99,6 +99,7 @@ static void print_helper(){
     printf("\t-a <time> \t\tSets the time (in seconds) after which the app will stop attempting to connect to server. Default value is 0. \033[0;31m This option must be set at most once. \033[0m\n");
     printf("\t-w <dir>[,n=0] \t\tSends the content of the directory <dir> (and its subdirectories) to the server. If n is specified, exactly n files will be sent to the server.\n");
     printf("\t-W <file>{,<file>}\tSends the files passed as arguments to the server.\n");
+    printf("\t-D <dir>\t\t\tWrites into directory <dir> all the files expelled by the server app. \033[0;31m This option must follow one of -w or -W. \033[0m\n");
     printf("\n");
 }
 
@@ -135,6 +136,10 @@ static void print_request_q(){
                 printf("\n");
                 break;
             }
+            case 'D': {
+                printf("-D %s\n", (char*)curr->data);
+                break;
+            }
         }
         curr = curr->next;
     }
@@ -158,6 +163,9 @@ static void clean_req_node(node_t* node){
             break;
         case 'W':
             list_delete((list_t**)&(node->data), free_only_node);
+            free(node);
+            break;
+        case 'D':
             free(node);
             break;
     }
