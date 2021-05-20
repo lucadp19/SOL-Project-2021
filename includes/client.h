@@ -52,6 +52,12 @@ extern bool a_option;
  */
 #define TIME_BETWEEN_CONN 50
 
+// ------------ TYPES ------------ //
+typedef struct {
+    char* dir;
+    long n_files;
+} str_long_pair_t;
+
 /**
  * Parses command line options given to the client program.
  * It returns 0 on success, -1 on error.

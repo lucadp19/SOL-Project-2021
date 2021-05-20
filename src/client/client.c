@@ -105,7 +105,22 @@ static void print_request_q(){
     node_t* curr = request_q->head;
 
     while(curr != NULL){
-        printf("%s: %ld\n", curr->key, (long)curr->data);
+        // printf("%s: %ld\n", curr->key, (long)curr->data);
+        if(curr->key == NULL) {
+            printf("curr->key is NULL :(\n");
+            continue;
+        }
+        switch(curr->key[0]){
+            case 't': 
+                printf("-t %ld\n", (long)curr->data);
+                break;
+            case 'w': {
+                str_long_pair_t* arg;
+                arg = (str_long_pair_t*)curr->data;
+                printf("-w %s %ld\n", arg->dir, arg->n_files);
+                break;
+            }
+        }
         curr = curr->next;
     }
 }
@@ -118,9 +133,14 @@ static void clean_req_node(node_t* node){
         return;
     }
     
-    if (node->key[0]== 't') {
-        free(node);
-        return;
+    switch(node->key[0]){
+        case 't':
+            free(node);
+            break;
+        case 'w':
+            free(node->data);
+            free(node);
+            break;
     }
 }
 
