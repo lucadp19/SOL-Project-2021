@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdarg.h>
+
 #include <errno.h>
 #include <ctype.h>
 
@@ -35,6 +37,24 @@
  *      - if str is not a number it returns -3 and sets errno.
  */
 int str_to_long(const char* str, long* num_ptr);
+
+/**
+ * Auxiliary function for debugging.
+ */
+int _debug(const char* format, ...);
+
+#ifdef DEBUG
+/**
+ * Prints its output on stderr if and only if DEBUG is defined.
+ */
+#define debug(...) \
+    _debug(__VA_ARGS__)
+#else
+/**
+ * Prints its output on stderr if and only if DEBUG is defined.
+ */
+#define debug(...)
+#endif
 
 // ------------- MUTEX & COND ------------- //
 /**

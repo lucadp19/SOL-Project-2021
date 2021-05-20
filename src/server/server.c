@@ -69,11 +69,6 @@ int main(int argc, char* argv[]){
     }
     fd_max = sig_handler_pipe[R_ENDP];
 
-    #ifdef DEBUG
-        printf("Sig_handler pipe r_endp: %d, w_endp: %d\n", sig_handler_pipe[0], sig_handler_pipe[1]);
-        fflush(stdout);
-    #endif
-
     if( install_sig_handler(sig_handler_pipe, &sig_handler_tid) == -1){
         perror("Error in installing signal handler");
         return -1;
@@ -188,9 +183,7 @@ int main(int argc, char* argv[]){
                     return -1;
                 }
 
-                #ifdef DEBUG
-                printf("New connection! File descriptor: %ld.\n", fd_client);
-                #endif
+                debug("New connection! File descriptor: %ld.\n", fd_client);
 
                 // adding client to master set
                 FD_SET(fd_client, &set);
@@ -218,10 +211,7 @@ int main(int argc, char* argv[]){
                 if(i != worker_pipes[j][R_ENDP]) continue;
 
                 // found the right pipe!
-                #ifdef DEBUG
-                    printf("Reading result from thread %d\n", i);
-                    fflush(stdout);
-                #endif
+                debug("Reading result from thread %d\n", i);
                 is_client_request = false;
                 // reading the result from thread
                 worker_res_t result;
@@ -259,10 +249,7 @@ int main(int argc, char* argv[]){
             // it's a client request
             long fd_client = i;
 
-            #ifdef DEBUG
-                printf("New request from client %ld!\n", fd_client);
-                fflush(stdout);
-            #endif
+            debug("New request from client %ld!\n", fd_client);
 
             // inserting it into the request queue
             safe_pthread_mutex_lock(&request_queue_mtx);

@@ -23,6 +23,18 @@ int str_to_long(const char* str, long* num_ptr){
     return -3;
 }
 
+int debug(const char* fmt, ...){
+    va_list argp;
+    va_start(argp, fmt);
+
+    // fprintf(stderr, "\x1B[33m");
+    vfprintf(stderr, fmt, argp);
+    // fprintf(stderr, "\x1B[0m");
+
+    va_end(argp);
+    return 0;
+}
+
 void safe_pthread_mutex_lock(pthread_mutex_t* mtx){
     int err;
     if( (err = pthread_mutex_lock(mtx)) != 0){

@@ -2,9 +2,7 @@
 #include "api/globals.h"
 
 int closeConnection(const char* sockname){
-    #ifdef DEBUG
-        printf("sockname = %s, socket_path = %s", sockname, socket_path);
-    #endif
+    debug("sockname = %s, socket_path = %s", sockname, socket_path);
 
     // wrong socket name
     if(sockname != socket_path){
@@ -19,9 +17,7 @@ int closeConnection(const char* sockname){
         return -1;
     }
 
-    #ifdef DEBUG
-        printf("Closed connection!\n");
-    #endif
+    debug("Closed connection!\n");
         
     RESET_SOCK;
     return 0;    

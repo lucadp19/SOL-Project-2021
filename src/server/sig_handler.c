@@ -5,9 +5,7 @@ sigset_t sig_mask;
 void* sig_handler_thread(void* arg){
     int* pipe = (int*)arg;
 
-    #ifdef DEBUG
-        printf("Hello, I'm the handler thread!\n");
-    #endif 
+    debug("Hello, I'm the handler thread!\n"); 
 
     while(true){
         int sig;
@@ -24,8 +22,7 @@ void* sig_handler_thread(void* arg){
             case SIGQUIT:
                 mode = CLOSE_SERVER;
 
-                printf("\nReceived signal, closing server!\n");
-                fflush(stdout);
+                debug("\nReceived signal, closing server!\n");
 
                 // signaling to main thread
                 close(pipe[W_ENDP]);

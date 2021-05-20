@@ -44,9 +44,7 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
     int err = -1;
     while( (err = connect(fd_sock, (struct sockaddr*)&sock_addr, sizeof(sock_addr))) == -1
             && curr_time.tv_sec < abstime.tv_sec ){
-        #ifdef DEBUG
-            printf("connect didn't succeed, trying again...\n");
-        #endif
+        debug("connect didn't succeed, trying again...\n");
             
         if( nanosleep(&wait_time, NULL) == -1){
             RESET_SOCK;
@@ -59,17 +57,14 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
     }
 
     if(err == -1) {
-        #ifdef DEBUG
-            printf("Could not connect to server. :(\n");
-        #endif
+        debug("Could not connect to server. :(\n");
+
         RESET_SOCK;
         errno = ETIMEDOUT;
         return -1;
     }
 
-    #ifdef DEBUG
-        printf("Connected! :D\n");
-    #endif
+    debug("Connected! :D\n");
 
     socket_path = sockname;
     return 0;

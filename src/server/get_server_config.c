@@ -30,12 +30,10 @@ int get_server_config(const char* path_to_config){
     // reading socket path
     FSCANF(config, "%s", server_config.socket_path, err);
 
-    #ifdef DEBUG
-        printf("No. workers: %u.\n", server_config.n_workers);
-        printf("Max space: %lu.\n", server_config.max_space);
-        printf("Max files: %u.\n", server_config.max_files);
-        printf("Socket path: %s.\n", server_config.socket_path);
-    #endif
+    debug("No. workers: %u.\n", server_config.n_workers);
+    debug("Max space: %lu.\n", server_config.max_space);
+    debug("Max files: %u.\n", server_config.max_files);
+    debug("Socket path: %s.\n", server_config.socket_path);
 
     fclose(config);
 

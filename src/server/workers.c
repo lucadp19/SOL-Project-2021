@@ -24,11 +24,8 @@ void* worker_thread(void* arg){
         return (void*)22l;
     }
 
-    #ifdef DEBUG
-        printf("Hello I'm a worker thread!\n");
-        fflush(stdout);
-    #endif
-
+    debug("Hello I'm a worker thread!\n");
+    
     int* pipe = (int*) arg;
 
     while(mode != CLOSE_SERVER){
@@ -52,10 +49,7 @@ void* worker_thread(void* arg){
         memset(&result, 0, sizeof(worker_res_t));
 
         // TODO: actual worker code
-        #ifdef DEBUG
-            printf("> THREAD: got request from fd %ld.\n", fd_client);
-            fflush(stdout);
-        #endif
+        debug("> THREAD: got request from fd %ld.\n", fd_client);
 
         result.code = 1; // close
         result.fd_client = fd_client;
@@ -65,15 +59,10 @@ void* worker_thread(void* arg){
             return (void*)-1l;
         }
 
-        #ifdef DEBUG
-            printf("> Job finished!\n");
-            fflush(stdout);
-        #endif
+        debug("> Job finished!\n");
     }
     
-    #ifdef DEBUG
-        printf("Closing thread!\n");
-    #endif
+    debug("Closing thread!\n");
 
     close(pipe[W_ENDP]);
     pipe[W_ENDP] = -1;
