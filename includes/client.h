@@ -44,7 +44,7 @@ extern bool f_option;
 /**
  * True iff -w option was set.
  */
-extern bool w_option;
+extern bool a_option;
 
 // ---------- CONSTANTS ---------- //
 /**

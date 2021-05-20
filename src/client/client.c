@@ -6,7 +6,7 @@ list_t* request_q = NULL;
 bool h_option = false;
 bool f_option = false;
 bool p_option = false;
-bool w_option = false;
+bool a_option = false;
 
 #ifdef DEBUG
 static void print_request_q();
@@ -52,7 +52,6 @@ int main(int argc, char* argv[]){
 
 
     // ------------ CONNECT ------------ //
-    // try to connect and then disconnect from socket
     int err;
     struct timespec abstime;
     
@@ -68,6 +67,7 @@ int main(int argc, char* argv[]){
     } else if( config.print_to_stdout )
         printf("Connected to %s!\n", config.socket);
 
+    // TODO: do things
     sleep(3);
 
     // ------- CLOSING CONNECTION ------ //
@@ -96,7 +96,7 @@ static void print_helper(){
     printf("\t-f <sock> \t\tSets socket name to <sock>. \033[0;31m This option must be set once and only once. \033[0m\n");
     printf("\t-p \t\t\tIf set, every operation will be printed to stdout. \033[0;31m This option must be set at most once. \033[0m\n");
     printf("\t-t <time> \t\tSets the waiting time (in milliseconds) between requests. Default is 0.\n");
-    printf("\t-w <time> \t\tSets the time (in seconds) after which the app will stop attempting to connect to server. Default value is 0. \033[0;31m This option must be set at most once. \033[0m\n");
+    printf("\t-a <time> \t\tSets the time (in seconds) after which the app will stop attempting to connect to server. Default value is 0. \033[0;31m This option must be set at most once. \033[0m\n");
     printf("\n");
 }
 
@@ -112,7 +112,16 @@ static void print_request_q(){
 #endif
 
 static void clean_req_node(node_t* node){
-    free(node);
+    if(node == NULL) return;
+    if(node->key == NULL){
+        free(node);
+        return;
+    }
+    
+    if (node->key[0]== 't') {
+        free(node);
+        return;
+    }
 }
 
 

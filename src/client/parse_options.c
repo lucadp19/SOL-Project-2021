@@ -3,7 +3,7 @@
 int parse_options(list_t* request_list, int argc, char* argv[]){
     int opt;
 
-    while( (opt = getopt(argc, argv, "hf:t:pw:")) != -1 ){
+    while( (opt = getopt(argc, argv, "hf:t:pa:")) != -1 ){
         switch(opt){
             
             // -h prints helper message
@@ -52,27 +52,27 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 }
             }
 
-            // -w option sets time to wait before giving a timeout
-            case 'w': {
-                if(!w_option){
+            // -a option sets time to await before giving a timeout
+            case 'a': {
+                if(!a_option){
                     if(str_to_long(optarg, &config.waiting_sec) == -1){
-                        fprintf(stderr, "Error in parsing option -w.\n");
+                        fprintf(stderr, "Error in parsing option -a.\n");
                         return -1;
                     }
 
                     if(config.waiting_sec < 0){
-                        fprintf(stderr, "Error in parsing option -w: negative time in seconds.\n");
+                        fprintf(stderr, "Error in parsing option -a: negative time in seconds.\n");
                         return -1;
                     }
                     
-                    w_option = true;
+                    a_option = true;
                     break;
                 } else {
-                    fprintf(stderr, "Error in parsing options: option -w can only be set once.\n");
+                    fprintf(stderr, "Error in parsing options: option -a can only be set once.\n");
                     return -1;
                 }
             }
-            
+
             // Option without an argument
             case ':': {
                 fprintf(stdout, "Error in parsing options: option -%c requires an argument.\n", optopt);
