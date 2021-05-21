@@ -106,6 +106,7 @@ static void print_helper(){
     printf("\t-d <dir> \t\tWrites into directory <dir> the files read from server. If it not specified, files read from server will be lost. \033[0;31m This option must follow one of -r or -R. \033[0m\n");
     printf("\t-l <file>{,<files>} \tLocks all the files given in the file list.\n");
     printf("\t-u <file>{,<files>} \tUnlocks all the files given in the file list.\n");
+    printf("\t-c <file>{,<files>} \tDeletes from server all the files given in the file list, if they exist.\n");
     printf("\n");
 }
 
@@ -129,46 +130,19 @@ static void print_request_q(){
                 printf("-w %s %ld\n", arg->dir, arg->n_files);
                 break;
             }
-            case 'W': {
-                list_t* args;
-                args = (list_t*)curr->data;
-                printf("-W");
-
-                node_t* curr = args->head;
-                while(curr != NULL){
-                    printf(" %s", curr->key);
-                    curr = curr->next;
-                }
-                printf("\n");
-                break;
-            }
-            case 'D': {
-                printf("-D %s\n", (char*)curr->data);
-                break;
-            }
-            case 'r': {
-                list_t* args;
-                args = (list_t*)curr->data;
-                printf("-r");
-
-                node_t* curr = args->head;
-                while(curr != NULL){
-                    printf(" %s", curr->key);
-                    curr = curr->next;
-                }
-                printf("\n");
-                break;
-            }
-            case 'R': {
+            case 'R':
                 printf("-R %ld\n", (long)curr->data);
                 break;
-            }
+            case 'D': 
             case 'd': {
-                printf("-d %s\n", (char*)curr->data);
+                printf("-%c %s\n", curr->key[0], (char*)curr->data);
                 break;
             }
+            case 'W':
+            case 'r':
             case 'l':
-            case 'u': {
+            case 'u': 
+            case 'c': {
                 list_t* args;
                 args = (list_t*)curr->data;
                 printf("-%c", curr->key[0]);
@@ -181,7 +155,6 @@ static void print_request_q(){
                 printf("\n");
                 break;
             }
-
         }
         curr = curr->next;
     }
@@ -196,32 +169,21 @@ static void clean_req_node(node_t* node){
     }
     
     switch(node->key[0]){
-        case 't':
-            free(node);
-            break;
         case 'w':
             free(node->data);
             free(node);
             break;
-        case 'W':
-            list_delete((list_t**)&(node->data), free_only_node);
-            free(node);
-            break;
+        case 't':
         case 'D':
-            free(node);
-            break;
-        case 'r':
-            list_delete((list_t**)&(node->data), free_only_node);
-            free(node);
-            break;
-        case 'R':
-            free(node);
-            break;        
+        case 'R':      
         case 'd':
             free(node);
             break; 
+        case 'W':
+        case 'r':
         case 'l':
         case 'u':
+        case 'c':
             list_delete((list_t**)&(node->data), free_only_node);
             free(node);
             break;
