@@ -5,7 +5,7 @@ static int comma_sep(list_t* list, char* arg);
 int parse_options(list_t* request_list, int argc, char* argv[]){
     int opt;
 
-    while( (opt = getopt(argc, argv, ":hf:t:pa:w:W:D:r:R::d:")) != -1 ){
+    while( (opt = getopt(argc, argv, ":hf:t:pa:w:W:D:r:R::d:l:u:")) != -1 ){
         switch(opt){
             
             // -h prints helper message
@@ -166,12 +166,56 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
             }
 
             // -d sets the directory in which files read from server will be printed
-            case 'd' : {
+            case 'd': {
                 if( list_push_back(request_list, "d", (void*)optarg) == -1){
                     perror("Error in pushing element to list");
                     fprintf(stderr, "Error in parsing option -d.\n");
                 }
                 break;
+            }
+
+            // -l locks a list of files
+            case 'l': {
+                list_t* files;
+
+                if( (files = empty_list()) == NULL){
+                    perror("Malloc error");
+                    fprintf(stderr, "Error in parsing option -l.\n");
+                    return -1;
+                }
+
+                if( comma_sep(files, optarg) == -1){
+                    fprintf(stderr, "Error in parsing option -l.\n");
+                    return -1;
+                }
+
+                if( list_push_back(request_list, "l", (void*)files) == -1){
+                    perror("Error in adding element to list");
+                    return -1;
+                }
+                break;    
+            }
+
+            // -u unlocks a list of files
+            case 'u': {
+                list_t* files;
+
+                if( (files = empty_list()) == NULL){
+                    perror("Malloc error");
+                    fprintf(stderr, "Error in parsing option -u.\n");
+                    return -1;
+                }
+
+                if( comma_sep(files, optarg) == -1){
+                    fprintf(stderr, "Error in parsing option -u.\n");
+                    return -1;
+                }
+
+                if( list_push_back(request_list, "u", (void*)files) == -1){
+                    perror("Error in adding element to list");
+                    return -1;
+                }
+                break;    
             }
             
             // -a option sets time to await before giving a timeout
