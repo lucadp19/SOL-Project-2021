@@ -103,6 +103,7 @@ static void print_helper(){
     printf("\t-D <dir>\t\tWrites into directory <dir> all the files expelled by the server app. \033[0;31m This option must follow one of -w or -W. \033[0m\n");
     printf("\t-r <file>{,<files>}\tReads the files specified in the argument list from the server.\n");
     printf("\t-R[<num>] \t\tReads <num> files from the server. If <num> is not specified, reads all files from the server. \033[0;31m There must be no space bewteen -R and <num>.\033[0m\n.");
+    printf("\t-d <dir> \t\tWrites into directory <dir> the files read from server. If it not specified, files read from server will be lost. \033[0;31m This option must follow one of -r or -R. \033[0m\n");
     printf("\n");
 }
 
@@ -160,6 +161,10 @@ static void print_request_q(){
                 printf("-R %ld\n", (long)curr->data);
                 break;
             }
+            case 'd': {
+                printf("-d %s\n", (char*)curr->data);
+                break;
+            }
         }
         curr = curr->next;
     }
@@ -195,6 +200,9 @@ static void clean_req_node(node_t* node){
         case 'R':
             free(node);
             break;        
+        case 'd':
+            free(node);
+            break;
     }
 }
 

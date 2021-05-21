@@ -5,7 +5,7 @@ static int comma_sep(list_t* list, char* arg);
 int parse_options(list_t* request_list, int argc, char* argv[]){
     int opt;
 
-    while( (opt = getopt(argc, argv, ":hf:t:pa:w:W:D:r:R::")) != -1 ){
+    while( (opt = getopt(argc, argv, ":hf:t:pa:w:W:D:r:R::d:")) != -1 ){
         switch(opt){
             
             // -h prints helper message
@@ -53,7 +53,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 arg->n_files = files;
 
                 if(list_push_back(request_q, "w", (void*)arg) == -1){
-                    perror("List push back error");
+                    perror("Error in adding element to list");
                     return -1;
                 }
                 break;
@@ -75,7 +75,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 }
 
                 if( list_push_back(request_list, "W", (void*)files) == -1){
-                    perror("List push back error");
+                    perror("Error in adding element to list");
                     return -1;
                 }
                 break;
@@ -85,39 +85,44 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
             case 't': {
                 long time;
 
-                if(str_to_long(optarg, &time) != 0){
-                    perror("str_to_long error");
+                if(str_to_long(optarg, &time) != 0) {
+                    perror("Error in converting string to integer");
                     fprintf(stderr, "Error in parsing option -t.\n");
                     return -1;
                 }
 
+                if(time < 0) {
+                    fprintf(stderr, "Error in parsing option -t: time must be a positive integer.\n");
+                    return -1;
+                }
+
                 if(list_push_back(request_list, "t", (void*)time) != 0){
-                    perror("List push_back error");
+                    perror("Error in adding element to list");
                     fprintf(stderr, "Error in parsing option -t.\n");
                     return -1;
                 }
                 break;
             }
-            
             // -p option sets printing mode
             case 'p': {
                 if(!p_option){
                     config.print_to_stdout = true;
                     p_option = true;
-                    break;
                 } else {
                     fprintf(stderr, "Error in parsing options: option -p can only be set once.\n");
                     return -1;
                 }
+                break;
             }
 
             // -D option sets directory in which to write files "expelled" by server app
             case 'D': {
                 if(list_push_back(request_list, "D", (void*)optarg) == -1){
-                    perror("List push back error");
+                    perror("Error in adding element to list");
                     fprintf(stderr, "Error in parsing option -D.\n");
                     return -1;
                 }
+                break;
             }
 
             // -r reads a list of files from server
@@ -136,7 +141,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 }
 
                 if( list_push_back(request_list, "r", (void*)files) == -1){
-                    perror("List push back error");
+                    perror("Error in adding element to list");
                     return -1;
                 }
                 break;                
@@ -160,11 +165,20 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 break;
             }
 
+            // -d sets the directory in which files read from server will be printed
+            case 'd' : {
+                if( list_push_back(request_list, "d", (void*)optarg) == -1){
+                    perror("Error in pushing element to list");
+                    fprintf(stderr, "Error in parsing option -d.\n");
+                }
+                break;
+            }
+            
             // -a option sets time to await before giving a timeout
             case 'a': {
                 if(!a_option){
                     if(str_to_long(optarg, &config.waiting_sec) == -1){
-                        perror("str_to_long error");
+                        perror("Error in converting string to integer");
                         fprintf(stderr, "Error in parsing option -a.\n");
                         return -1;
                     }
