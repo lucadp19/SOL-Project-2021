@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
     char* config_path = (argc == 1) ? "config/config.txt" : argv[1];
      
     if( get_server_config(config_path) == -1){
-        perror("Error in reading config file");
+        // perror("Error in reading config file");
         return -1;
     }
     // ----- MAX FILE DESCRIPTOR ----- //

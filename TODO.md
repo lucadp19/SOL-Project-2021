@@ -4,7 +4,6 @@
 - Decide if general (non-API) functions should perror or only return the error code
 
 ## Server
-- Modify the config structure and function to use a "key : value" structure instead of having to write them in order
 - Maybe enum type for worker thread results
 
 ## Client

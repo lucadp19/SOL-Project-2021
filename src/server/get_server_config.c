@@ -21,19 +21,41 @@ int get_server_config(const char* path_to_config){
     }
 
     int err;
-    // reading number of workers
-    FSCANF(config, "%u\n", &server_config.n_workers, err);
-    // reading max server space
-    FSCANF(config, "%lu\n", &server_config.max_space, err);
-    // reading max number of files
-    FSCANF(config, "%u\n", &server_config.max_files, err);
-    // reading socket path
-    FSCANF(config, "%s", server_config.socket_path, err);
+    char current_opt[10];
+    for(int i = 0; i < 4; i++){
+        FSCANF(config, " %9c = ", current_opt, err);
 
-    debug("No. workers: %u.\n", server_config.n_workers);
-    debug("Max space: %lu.\n", server_config.max_space);
-    debug("Max files: %u.\n", server_config.max_files);
-    debug("Socket path: %s.\n", server_config.socket_path);
+        // max_files
+        if(strncmp(current_opt, "max_files", 9) == 0){
+            FSCANF(config, "%u", &server_config.max_files, err);
+            debug("option max_files = %u\n", server_config.max_files);
+            continue;
+        }
+        
+        // max_space
+        if(strncmp(current_opt, "max_space", 9) == 0){
+            FSCANF(config, "%lu", &server_config.max_space, err);
+            debug("option max_space = %lu\n", server_config.max_space);
+            continue;
+        }
+
+        // no_worker
+        if(strncmp(current_opt, "no_worker", 9) == 0){
+            FSCANF(config, "%u", &server_config.n_workers, err);
+            debug("option no_worker = %u\n", server_config.n_workers);
+            continue;
+        }
+
+        // sock_path
+        if(strncmp(current_opt, "sock_path", 9) == 0){
+            FSCANF(config, "%s", server_config.socket_path, err);
+            debug("option sock_path = %s\n", server_config.socket_path);
+            continue;
+        }
+
+        fprintf(stderr, "Unknown option in config file. Aborting.\n");
+        return -1;
+    }
 
     fclose(config);
 

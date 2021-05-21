@@ -1,4 +1,6 @@
-5
-64
-20
-socket.sk
+no_worker = 5
+max_space= 64
+
+max_files =   20
+
+sock_path     =     socket

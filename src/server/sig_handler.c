@@ -58,9 +58,7 @@ int install_sig_handler(int* pipe, pthread_t* sig_handler_tid){
         return -1;
     }
 
-    #ifdef DEBUG
-        printf("Masked SIGINT and SIGQUIT\n");
-    #endif
+    debug("Masked SIGINT, SIGQUIT and SIGHUP\n");
 
     // Ignoring SIGPIPE
     struct sigaction sig_act;
@@ -71,10 +69,7 @@ int install_sig_handler(int* pipe, pthread_t* sig_handler_tid){
         return -1;
     }
 
-    #ifdef DEBUG
-        printf("Ignored SIGPIPE\n");
-        fflush(stdout);
-    #endif
+    debug("Ignored SIGPIPE\n");
 
     // ------------ SIGHANDLER THREAD ------------ //
     if( (err = pthread_create(sig_handler_tid, NULL, sig_handler_thread, pipe)) != 0) {
