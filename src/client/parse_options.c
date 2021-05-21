@@ -5,7 +5,7 @@ static int comma_sep(list_t* list, char* arg);
 int parse_options(list_t* request_list, int argc, char* argv[]){
     int opt;
 
-    while( (opt = getopt(argc, argv, "hf:t:pa:w:W:D:r:")) != -1 ){
+    while( (opt = getopt(argc, argv, ":hf:t:pa:w:W:D:r:R::")) != -1 ){
         switch(opt){
             
             // -h prints helper message
@@ -31,7 +31,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 char* directory;
                 char* no_of_files_str;
                 char* save = NULL;
-                long files = -1;
+                long files = 0;
 
                 directory = strtok_r(optarg, ",", &save);
                 if(directory == NULL){
@@ -39,7 +39,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                     return -1;
                 }
                 no_of_files_str = strtok_r(NULL, ",", &save);
-                if(no_of_files_str != NULL && sscanf(no_of_files_str, "n=%ld", &files) == EOF){
+                if(no_of_files_str != NULL && (sscanf(no_of_files_str, "%ld", &files) == EOF || files < 0)){
                     fprintf(stderr, "Error in parsing option -w: couldn't read number of files.\n");
                     return -1;
                 }
@@ -140,6 +140,24 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                     return -1;
                 }
                 break;                
+            }
+
+            // -R option reads n files from server
+            case 'R': {
+                long n = 0;
+                
+                if(optarg != NULL) {
+                    if(sscanf(optarg, "%ld", &n)  == EOF || n < 0){
+                        fprintf(stderr, "Error in parsing option -R.\n");
+                        return -1;
+                    }
+                }
+                if(list_push_back(request_list, "R", (void*)n) == -1){
+                    perror("Error in adding element to list");
+                    fprintf(stderr, "Error in parsing option -R.\n");
+                    return -1;
+                }
+                break;
             }
 
             // -a option sets time to await before giving a timeout
