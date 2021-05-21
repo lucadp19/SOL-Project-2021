@@ -41,4 +41,6 @@ void* sig_handler_thread(void* arg);
 int install_workers(pthread_t* worker_ids, int** worker_pipes);
 void* worker_thread(void* arg);
 
+int open_file(long fd_client);
+
 #endif

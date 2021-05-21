@@ -1,3 +1,5 @@
+#ifndef _API_GLOBALS_H
+#define _API_GLOBALS_H
 
 /**
  * File descriptor for the currently connected socket.
@@ -15,3 +17,5 @@ extern const char* socket_path;
         fd_sock = -1; \
         socket_path = NULL; \
     } while(0)
+
+#endif

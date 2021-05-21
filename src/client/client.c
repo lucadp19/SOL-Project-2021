@@ -1,4 +1,5 @@
 #include "client.h"
+#include "util/files.h"
 
 client_conf_t config;
 list_t* request_q = NULL;
@@ -68,7 +69,28 @@ int main(int argc, char* argv[]){
         printf("Connected to %s!\n", config.socket);
 
     // TODO: do things
-    sleep(3);
+    debug("Testing open file");
+    // test: openFile
+    if( openFile("machine_head", O_CREATE) == -1){
+        perror("open file");
+        return -1;
+    }
+    sleep(1);
+    if( openFile("fireball", O_CREATE | O_LOCK) == -1){
+        perror("open file");
+        return -1;
+    }
+    sleep(1);
+    if( openFile("in_rock", O_LOCK) == -1){
+        perror("open file");
+        return -1;
+    }
+    sleep(1);
+    if( openFile("made_in_japan", O_NOFLAG ) == -1){
+        perror("open file");
+        return -1;
+    }
+    sleep(1);
 
     // ------- CLOSING CONNECTION ------ //
     if( (err = closeConnection(config.socket)) == -1){

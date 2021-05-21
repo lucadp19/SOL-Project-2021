@@ -1,4 +1,5 @@
 #include "server.h"
+#include "server-api-protocol.h"
 
 int install_workers(pthread_t worker_tids[], int** worker_pipes){
     if(worker_tids == NULL || worker_pipes == NULL){
@@ -47,18 +48,46 @@ void* worker_thread(void* arg){
         worker_res_t result;
         // memsetting otherwise valgrind will complain
         memset(&result, 0, sizeof(worker_res_t));
+        result.fd_client = fd_client;
 
         // TODO: actual worker code
         debug("> THREAD: got request from fd %ld.\n", fd_client);
 
-        result.code = 1; // close
-        result.fd_client = fd_client;
-        
-        if( writen(pipe[W_ENDP], &result, sizeof(worker_res_t)) == -1){
-            perror("Error writen");
-            return (void*)-1l;
+        int l;
+        op_code_t op_code;
+        if( (l = readn(fd_client, &op_code, sizeof(op_code_t))) == -1){
+            perror("Error readn");
+            return (void*)-1l; // TODO: what should I do in this case?
         }
 
+        if( l == 0 ){ // closed connection!
+            result.code = 1;
+            if( writen(pipe[W_ENDP], &result, sizeof(worker_res_t)) == -1){
+                perror("Error writen");
+                return (void*)-1l; // TODO: same thing :(
+            }
+            continue;
+        }
+
+        debug("op_code read. It is %d\n", op_code);
+
+        switch (op_code) {
+            case OPEN_FILE: {
+                if (open_file(fd_client) == 0)
+                    result.code = 0;
+                else result.code = -1;
+                break;
+            }
+
+            default:
+                result.code = -1;
+                break;
+        }
+
+        if( writen(pipe[W_ENDP], &result, sizeof(worker_res_t)) == -1){
+            perror("Error writen");
+            return (void*)-1l; // TODO: same thing :(
+        }
         debug("> Job finished!\n");
     }
     
