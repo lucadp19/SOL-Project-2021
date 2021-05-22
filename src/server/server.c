@@ -10,6 +10,9 @@ list_t* request_queue = NULL;
 pthread_mutex_t request_queue_mtx = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t request_queue_nonempty = PTHREAD_COND_INITIALIZER;
 
+hashmap_t* files = NULL;
+pthread_mutex_t files_mtx = PTHREAD_MUTEX_INITIALIZER;
+
 /** 
  * pthread_yield for the given threads.
  */
@@ -32,9 +35,9 @@ static inline int update_max(fd_set set, int fd_max);
  */
 static long hash_funct(long val, long nlist);
 /**
- * A simple node cleaner.
+ * A simple string hash function.
  */
-static void node_cleaner(node_t* node);
+static void str_hash_funct(char* str, long nlist);
 
 
 
@@ -77,6 +80,12 @@ int main(int argc, char* argv[]){
     // ---------- CLIENT TABLE --------- //
     if( hashtbl_init(&conn_client_table, HASH_N_LIST, hash_funct) == -1){
         perror("Error while creating hashtable");
+        return -1;
+    }
+
+    // ----------- FILES MAP ----------- //
+    if( hashmap_init(&files, HASH_N_LIST, str_hash_funct, files_node_cleaner) == -1){
+        perror("Error while creating hashmap");
         return -1;
     }
 
@@ -320,7 +329,7 @@ int main(int argc, char* argv[]){
 
     // freeing memory    
     hashtbl_free(&conn_client_table);
-    list_delete(&request_queue, node_cleaner);
+    list_delete(&request_queue, free_only_node);
 
     if(sig_handler_pipe != NULL) {
         free(sig_handler_pipe);
@@ -408,6 +417,32 @@ static long hash_funct(long val, long nlist){
     return (long)floor(nlist*modf(val*A, &useless));
 }
 
-static void node_cleaner(node_t* node){
-    free(node);
+// Taken from the following link:
+// http://www.cse.yorku.ca/~oz/hash.html
+static long str_hash_funct(const char* str, long nlist){
+    long hash = 5381;
+    int c;
+
+    while (c = *str++)
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+    return hash;
+}
+
+static void files_node_cleaner(node_t* node){
+    if(node == NULL) return;
+
+    file_t* file = (file_t*)node->data;
+    file_delete(file);
+}
+
+void file_delete(file_t* file){
+    if(file == NULL) return;
+
+    if(file->path_name != NULL)
+        free(file->path_name);
+    if(file->contents != NULL)
+        free(file->contents);
+    
+    free(file);
 }

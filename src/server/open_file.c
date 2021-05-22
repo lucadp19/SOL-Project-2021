@@ -16,6 +16,7 @@ int open_file(long fd_client){
     debug("pathname = <%s>\n", pathname);
 
     readn(fd_client, &flags, sizeof(int));
+    debug("flag = %d\n", flags);
     if(IS_FLAG_SET(flags, O_CREATE))
         debug("O_CREATE is set\n");
     else debug("O_CREATE is not set\n");

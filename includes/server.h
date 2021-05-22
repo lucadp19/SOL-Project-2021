@@ -24,6 +24,24 @@ typedef enum {
     CLOSE_SERVER
 } server_mode_t;
 
+/**
+ * A file in the server filesystem.
+ */
+typedef struct {
+    /** Path to file. */
+    char* path_name;
+    /** Contents of the file. */
+    void* contents;
+    /** File descriptor of the client who has locked this file.
+     * -1 if no client is currently locking this file.
+     */
+    long fd_lock;
+    /** Mutex to modify this file. */
+    pthread_mutex_t file_mtx;
+    /** Time of last use to implement LRU. */
+    time_t last_use;
+} file_t;
+
 // ------ GLOBAL VARIABLES ------ //
 extern server_config_t server_config;
 extern server_mode_t mode;
@@ -31,6 +49,9 @@ extern server_mode_t mode;
 extern list_t* request_queue;
 extern pthread_mutex_t request_queue_mtx;
 extern pthread_cond_t request_queue_nonempty;
+
+extern hashmap_t* files;
+extern pthread_mutex_t files_mtx;
 
 // --------- FUNCTIONS --------- //
 int get_server_config(const char* path_to_config);
@@ -42,5 +63,7 @@ int install_workers(pthread_t* worker_ids, int** worker_pipes);
 void* worker_thread(void* arg);
 
 int open_file(long fd_client);
+
+void file_delete(file_t* file);
 
 #endif
