@@ -32,6 +32,8 @@ typedef struct {
     char* path_name;
     /** Contents of the file. */
     void* contents;
+    /** The file descriptor of the client who currently has this file open. */
+    long open;
     /** File descriptor of the client who has locked this file.
      * -1 if no client is currently locking this file.
      */
@@ -64,6 +66,7 @@ void* worker_thread(void* arg);
 
 int open_file(long fd_client);
 
+int add_file_to_fs(file_t* file);
 void file_delete(file_t* file);
 
 #endif

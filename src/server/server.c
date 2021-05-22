@@ -37,7 +37,10 @@ static long hash_funct(long val, long nlist);
 /**
  * A simple string hash function.
  */
-static void str_hash_funct(char* str, long nlist);
+static unsigned long str_hash_funct(const char* str, long nlist);
+/**
+ */
+static void files_node_cleaner(node_t* node);
 
 
 
@@ -327,8 +330,39 @@ int main(int argc, char* argv[]){
     }
     free(iter);
 
+    // printing all files in memory
+    #ifdef DEBUG
+    iter = NULL;
+    if( (iter = malloc(sizeof(hash_iter_t))) == NULL){
+        perror("Error in iterator creation");
+        return -1;
+    }
+    if(hash_iter_init(iter) == -1){
+        perror("Error in iterator initialization");
+        return -1;
+    }
+    while(true){
+        int err = hashmap_iter_get_next(iter, files);
+        
+        if(err == 1) // end of table
+            break;
+        
+        if(err == -1){ // actual error
+            perror("Error in hashtbl_iter_get_next");
+            return -1;
+        }
+
+        file_t* file = (file_t*)iter->current_pos->data;
+        printf("file path: %s\n", file->path_name);
+        printf("file lock: %ld\n", file->fd_lock);
+        printf("file last use: %ld\n", file->last_use);
+    }
+    free(iter);
+    #endif
+
     // freeing memory    
     hashtbl_free(&conn_client_table);
+    hashmap_free(&files);
     list_delete(&request_queue, free_only_node);
 
     if(sig_handler_pipe != NULL) {
@@ -419,11 +453,11 @@ static long hash_funct(long val, long nlist){
 
 // Taken from the following link:
 // http://www.cse.yorku.ca/~oz/hash.html
-static long str_hash_funct(const char* str, long nlist){
-    long hash = 5381;
+static unsigned long str_hash_funct(const char* str, long nlist){
+    unsigned long hash = 5381;
     int c;
 
-    while (c = *str++)
+    while( (c = *(str++)) )
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
     return hash;
@@ -434,6 +468,8 @@ static void files_node_cleaner(node_t* node){
 
     file_t* file = (file_t*)node->data;
     file_delete(file);
+
+    free(node);
 }
 
 void file_delete(file_t* file){
@@ -445,4 +481,5 @@ void file_delete(file_t* file){
         free(file->contents);
     
     free(file);
+    debug("File deleted\n");
 }
