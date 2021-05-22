@@ -43,3 +43,35 @@ int hashtbl_iter_get_next(hash_iter_t* iter, hashtbl_t* table){
 
     return 1;
 }
+
+int hashmap_iter_get_next(hash_iter_t* iter, hashmap_t* map){
+    if(map == NULL || iter == NULL){
+        errno = EINVAL;
+        return -1;
+    }
+
+    if(iter->current_pos != NULL){
+        iter->current_pos = iter->current_pos->next;
+        
+        if(iter->current_pos != NULL){ // found next element in the same list
+            return 0;
+        }
+    }
+
+    // list ended: must go to next list
+    // searching for next non-empty list
+    while(iter->current_list + 1 < map->nlist && iter->current_pos == NULL){
+        iter->current_list++;
+        iter->current_pos = map->list[iter->current_list]->head;
+    }
+
+    if(iter->current_pos != NULL){ // finally found it
+        return 0;
+    }
+
+    // end of hashtable
+    iter->current_pos = NULL;
+    iter->current_list = -2;
+
+    return 1;
+}

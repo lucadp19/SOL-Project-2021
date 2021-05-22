@@ -26,4 +26,13 @@ int hash_iter_init(hash_iter_t* iter);
  */
 int hashtbl_iter_get_next(hash_iter_t* iter, hashtbl_t* table); 
 
+/**
+ * Gets the next element from the map.
+ * It returns
+ *      0 if a next element is found;
+ *      -1 and sets errno if there is an error;
+ *      1 if the end of the map is reached.
+ */
+int hashmap_iter_get_next(hash_iter_t* iter, hashmap_t* map); 
+
 #endif

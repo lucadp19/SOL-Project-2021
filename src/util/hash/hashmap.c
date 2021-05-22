@@ -1,7 +1,7 @@
 #include "util/hash/hashmap.h"
 
 static inline int _hashmap_insert(hashmap_t* map, const char* key, void* data){
-    long hash = (map->hash_funct(key)) % (map->nlist);
+    unsigned long hash = (map->hash_funct(key, map->nlist)) % (map->nlist);
 
     if( list_push_back(map->list[hash], key, data) == -1) {
         return -1;
@@ -39,7 +39,7 @@ static int hashmap_expand(hashmap_t** map){
     return 0;
 }
 
-int hashmap_init(hashmap_t** map, int nlist, long (*hash_funct)(const char*), void (*node_cleaner)(node_t*)){
+int hashmap_init(hashmap_t** map, int nlist, unsigned long (*hash_funct)(const char*, long), void (*node_cleaner)(node_t*)){
     (*map) = NULL;
 
     if( ((*map) = (hashmap_t*)malloc(sizeof(hashmap_t))) == NULL){
@@ -85,13 +85,15 @@ int hashmap_insert(hashmap_t** map, const char* key, void* item){
     return 0;
 }
 
-int hashmap_remove(hashmap_t* map, const char* key){
+int hashmap_remove(hashmap_t* map, const char* key, char** key_ptr, void** data_ptr){
     if(map == NULL){
         errno = EINVAL;
         return -1;
     }
 
-    long hash = (map->hash_funct(key)) % (map->nlist);
+    
+
+    unsigned long hash = (map->hash_funct(key, map->nlist)) % (map->nlist);
 
     node_t* curr = map->list[hash]->head;
 
@@ -107,6 +109,11 @@ int hashmap_remove(hashmap_t* map, const char* key){
             if(curr->next != NULL)
                 curr->next->prev = curr->prev;
             else map->list[hash]->tail = NULL;
+
+            if(data_ptr != NULL)
+                *data_ptr = curr->data;
+            if(key_ptr != NULL)
+                *key_ptr = curr->key;
 
             free(curr);
             map->list[hash]->nelem--;
@@ -132,4 +139,32 @@ void hashmap_free(hashmap_t** map){
     *map = NULL;
 }
 
+int hashmap_get_by_key(hashmap_t* map, const char* key, void** data){
+    unsigned long hash = (map->hash_funct(key, map->nlist)) % (map->nelem);
 
+    node_t* curr = map->list[hash]->head;
+    *data = NULL;
+
+    while(curr != NULL){
+        if(strcmp(key, curr->key) == 0){
+            *data = curr->data;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+bool hashmap_contains(hashmap_t* map, const char* key){
+    if(map == NULL) return false;
+    
+    unsigned long hash = (map->hash_funct(key, map->nlist)) % (map->nlist);
+    debug("hash = %ld\n");
+    node_t* curr = map->list[hash]->head;
+
+    while(curr != NULL)
+        if(strcmp(key, curr->key) == 0)
+            return true;    
+
+    return false;
+}
