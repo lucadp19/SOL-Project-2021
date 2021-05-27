@@ -13,6 +13,7 @@ typedef struct {
     size_t max_space;
     unsigned int max_files;
     char socket_path[PATH_MAX];
+    char log_dir_path[PATH_MAX];
 } server_config_t;
 
 typedef struct {
@@ -68,6 +69,8 @@ typedef struct {
 extern server_config_t server_config;
 extern server_mode_t mode;
 extern server_state_t curr_state;
+
+extern FILE* log_file;
 
 extern list_t* request_queue;
 extern pthread_mutex_t request_queue_mtx;

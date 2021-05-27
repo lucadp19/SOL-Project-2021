@@ -4,3 +4,7 @@ max_space= 64
 max_files =   20
 
 sock_path     =     socket
+
+
+
+path_dlog = logs/

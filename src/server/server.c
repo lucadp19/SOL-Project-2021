@@ -1,9 +1,12 @@
 #include "server.h"
 #include "math.h"
+#include <time.h>
 
 server_config_t server_config;
 server_mode_t mode = ACCEPT_CONN;
 server_state_t curr_state;
+
+FILE* log_file = NULL;
 
 hashtbl_t* conn_client_table = NULL;
 
@@ -37,6 +40,8 @@ static void files_node_cleaner(node_t* node);
 
 static void close_client(long fd_client);
 
+static int init_log_file();
+
 
 int main(int argc, char* argv[]){ 
     if(argc > 2){
@@ -48,9 +53,12 @@ int main(int argc, char* argv[]){
     char* config_path = (argc == 1) ? "config/config.txt" : argv[1];
      
     if( get_server_config(config_path) == -1){
-        // perror("Error in reading config file");
         return -1;
     }
+    // ----------- LOG FILE ----------- //
+    if( init_log_file() == -1 )
+        return -1;
+
     // ----- MAX FILE DESCRIPTOR ----- //
     long fd_max = -1;
 
@@ -246,7 +254,7 @@ int main(int argc, char* argv[]){
                         }
                         close_client(result.fd_client);
                         break;
-                        
+
                     case MW_FATAL_ERROR:
                         debug("Fatal error in connection with client %ld. Closing connection.\n", result.fd_client);
                         if( hashtbl_remove(conn_client_table, result.fd_client) == -1){
@@ -383,6 +391,8 @@ int main(int argc, char* argv[]){
         worker_pipes = NULL;
     }
 
+    fclose(log_file);
+
     return 0;
 }
 
@@ -490,4 +500,37 @@ static void close_client(long fd_client){
     }
     free(iter);
     safe_pthread_mutex_unlock(&files_mtx);
+}
+
+static int init_log_file(){
+    struct tm curr_time;
+    char* log_file_path;
+    time_t curr_time_abs = time(NULL);
+
+    localtime_r(&curr_time_abs, &curr_time);
+    int dir_path_len = strlen(server_config.log_dir_path);
+
+    log_file_path = safe_malloc((dir_path_len + 30) * sizeof(char));
+    memset(log_file_path, '\0', sizeof(char)*(dir_path_len + 30));
+    // writing info on log_file_path string
+    snprintf(
+        log_file_path, dir_path_len + 30,
+        "%s/log-%4d-%02d-%02d-%02d:%02d:%02d.txt", 
+        server_config.log_dir_path,
+        curr_time.tm_year + 1900,
+        curr_time.tm_mon + 1,
+        curr_time.tm_mday,
+        curr_time.tm_hour,
+        curr_time.tm_min,
+        curr_time.tm_sec
+    );
+
+    debug("Log file path is: %s\n", log_file_path);
+    if( (log_file = fopen(log_file_path, "w")) == NULL){
+        fprintf(stderr, "Fatal error in creating log file. Aborting.\n");
+        return -1;
+    }
+    free(log_file_path);
+
+    return 0;
 }
