@@ -31,17 +31,8 @@ static void unlink_socket();
  */
 static inline int update_max(fd_set set, int fd_max);
 /**
- * A simple hash function.
- */
-static long hash_funct(long val, long nlist);
-/**
- * A simple string hash function.
- */
-static unsigned long str_hash_funct(const char* str, long nlist);
-/**
  */
 static void files_node_cleaner(node_t* node);
-
 
 
 int main(int argc, char* argv[]){ 
@@ -81,13 +72,13 @@ int main(int argc, char* argv[]){
     }
 
     // ---------- CLIENT TABLE --------- //
-    if( hashtbl_init(&conn_client_table, HASH_N_LIST, hash_funct) == -1){
+    if( hashtbl_init(&conn_client_table, HASH_N_LIST, default_hashtbl_hash) == -1){
         perror("Error while creating hashtable");
         return -1;
     }
 
     // ----------- FILES MAP ----------- //
-    if( hashmap_init(&files, HASH_N_LIST, str_hash_funct, files_node_cleaner) == -1){
+    if( hashmap_init(&files, HASH_N_LIST, default_hashmap_hash, files_node_cleaner) == -1){
         perror("Error while creating hashmap");
         return -1;
     }
@@ -441,26 +432,6 @@ static inline int update_max(fd_set set, int fd_max){
             return i;
     
     return -1;
-}
-
-// Taken from Cormen and the following link:
-// https://www.cs.hmc.edu/~geoff/classes/hmc.cs070.200101/homework10/hashfuncs.html
-static long hash_funct(long val, long nlist){
-    double A = 0.5*(sqrt(5) - 1);
-    double useless;
-    return (long)floor(nlist*modf(val*A, &useless));
-}
-
-// Taken from the following link:
-// http://www.cse.yorku.ca/~oz/hash.html
-static unsigned long str_hash_funct(const char* str, long nlist){
-    unsigned long hash = 5381;
-    int c;
-
-    while( (c = *(str++)) )
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-
-    return hash;
 }
 
 static void files_node_cleaner(node_t* node){

@@ -12,7 +12,7 @@ typedef struct {
     long nlist;
     long nelem;
     list_t** list;
-    long (*hash_funct)(long, long);
+    unsigned long (*hash_funct)(long, long);
 } hashtbl_t;
 
 /**
@@ -20,7 +20,7 @@ typedef struct {
  * On success returns 0 and returns the new hashtable in table,
  * on error returns -1 and sets errno.
  */
-int hashtbl_init(hashtbl_t** table, int nlist, long (*hash_funct)(long, long));
+int hashtbl_init(hashtbl_t** table, int nlist, unsigned long (*hash_funct)(long, long));
 
 /**
  * Inserts a new element into the hashtable table.
@@ -40,5 +40,10 @@ int hashtbl_remove(hashtbl_t* table, long item);
  * At the end of this function, table will not point to a meaningful location of memory.
  */
 void hashtbl_free(hashtbl_t** table);
+
+/**
+ * Default hashtable hashing function.
+ */
+unsigned long default_hashtbl_hash(long val, long nlist);
 
 #endif

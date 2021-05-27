@@ -38,6 +38,10 @@ typedef struct {
      * -1 if no client is currently locking this file.
      */
     long fd_lock;
+    /** Hashtable containing all the file descriptors of clients 
+     * who have opened this file.
+     */
+    hashtbl_t* fd_open;
     /** Mutex to modify this file. */
     pthread_mutex_t file_mtx;
     /** Time of last use to implement LRU. */

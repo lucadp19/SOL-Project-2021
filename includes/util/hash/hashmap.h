@@ -55,4 +55,9 @@ int hashmap_get_by_key(hashmap_t* map, const char* key, void** data);
  */
 bool hashmap_contains(hashmap_t* map, const char* key);
 
+/**
+ * Default hashmap hashing function.
+ */
+unsigned long default_hashmap_hash(const char* key, long nlist);
+
 #endif

@@ -91,8 +91,6 @@ int hashmap_remove(hashmap_t* map, const char* key, char** key_ptr, void** data_
         return -1;
     }
 
-    
-
     unsigned long hash = (map->hash_funct(key, map->nlist)) % (map->nlist);
 
     node_t* curr = map->list[hash]->head;
@@ -157,7 +155,7 @@ int hashmap_get_by_key(hashmap_t* map, const char* key, void** data){
 
 bool hashmap_contains(hashmap_t* map, const char* key){
     if(map == NULL) return false;
-    
+
     unsigned long hash = (map->hash_funct(key, map->nlist)) % (map->nlist);
     debug("hash = %ld\n");
     node_t* curr = map->list[hash]->head;
@@ -168,3 +166,16 @@ bool hashmap_contains(hashmap_t* map, const char* key){
 
     return false;
 }
+
+// Taken from the following link:
+// http://www.cse.yorku.ca/~oz/hash.html
+unsigned long default_hashmap_hash(const char* str, long nlist){
+    unsigned long hash = 5381;
+    int c;
+
+    while( (c = *(str++)) )
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+    return hash;
+}
+

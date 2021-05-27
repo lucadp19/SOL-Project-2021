@@ -1,4 +1,5 @@
 #include "util/hash/hashtable.h"
+#include <math.h>
 
 static inline int _hashtbl_insert(hashtbl_t* table, long item){
     long hash = (table->hash_funct(item, table->nlist)) % table->nlist;
@@ -43,7 +44,7 @@ static int hashtbl_expand(hashtbl_t** table){
     return 0;
 }
 
-int hashtbl_init(hashtbl_t** table, int nlist, long (*hash_funct)(long, long)){
+int hashtbl_init(hashtbl_t** table, int nlist, unsigned long (*hash_funct)(long, long)){
     (*table) = NULL;
 
     if( ((*table) = (hashtbl_t*)malloc(sizeof(hashtbl_t))) == NULL){
@@ -130,3 +131,10 @@ void hashtbl_free(hashtbl_t** table){
     free(*table);
 }
 
+// Taken from Cormen and the following link:
+// https://www.cs.hmc.edu/~geoff/classes/hmc.cs070.200101/homework10/hashfuncs.html
+unsigned long default_hashtbl_hash(long val, long nlist){
+    double A = 0.5*(sqrt(5) - 1);
+    double useless;
+    return (unsigned long)floor(nlist*modf(val*A, &useless));
+}
