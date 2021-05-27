@@ -118,6 +118,42 @@ void* worker_thread(void* arg){
 
                 break;
             }
+            case CLOSE_FILE: {
+                int res = close_file(fd_client);
+
+                // setting result code for main thread
+                if(res == SA_SUCCESS)
+                    result.code = MW_SUCCESS;
+                else if(res == SA_CLOSE || res == SA_ERROR)
+                    result.code = MW_FATAL_ERROR;
+                else result.code = MW_NON_FATAL_ERROR;
+
+                // setting result code for client
+                int err;
+                // TODO: maybe make function res -> errno
+                switch(res){
+                    case SA_SUCCESS:
+                        err = 0;
+                        break;
+                    case SA_NO_FILE:
+                        err = ENOENT;
+                        break;
+                    case SA_CLOSE:
+                    case SA_ERROR:
+                    default:
+                        err = -1;
+                        break;
+                }
+
+                if( writen(fd_client, &err, sizeof(int)) == -1){
+                    perror("Error in writing to client");
+                    result.code = MW_FATAL_ERROR;
+                    break;
+                }
+
+                break;
+            }
+
 
             default:
                 result.code = MW_FATAL_ERROR;

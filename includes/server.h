@@ -97,6 +97,15 @@ void* worker_thread(void* arg);
  *                  if the client is trying to lock an already locked file
  */
 int open_file(long fd_client);
+/**
+ * Deals with a closeFile request from the API.
+ * Can return:
+ *      SA_SUCCESS  in case of success (also when the client didn't open the given file)
+ *      SA_ERROR    if there is an unspecified error
+ *      SA_CLOSE    if the client closed its connection
+ *      SA_NO_FILE  if the client is trying to close a non-existing file
+ */
+int close_file(long fd_client);
 
 int add_file_to_fs(file_t* file);
 void file_delete(file_t* file);
