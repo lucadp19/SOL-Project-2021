@@ -14,6 +14,11 @@ typedef struct {
 } server_config_t;
 
 typedef struct {
+    unsigned int files;
+    size_t space;
+} server_state_t;
+
+typedef struct {
     int code;
     long fd_client;
 } worker_res_t;
@@ -32,6 +37,8 @@ typedef struct {
     char* path_name;
     /** Contents of the file. */
     void* contents;
+    /** Size of the contents of the file. */
+    size_t size;
     /** The file descriptor of the client who currently has this file open. */
     long open;
     /** File descriptor of the client who has locked this file.
@@ -51,6 +58,7 @@ typedef struct {
 // ------ GLOBAL VARIABLES ------ //
 extern server_config_t server_config;
 extern server_mode_t mode;
+extern server_state_t curr_state;
 
 extern list_t* request_queue;
 extern pthread_mutex_t request_queue_mtx;
@@ -72,5 +80,8 @@ int open_file(long fd_client);
 
 int add_file_to_fs(file_t* file);
 void file_delete(file_t* file);
+
+int expell_LRU(file_t** file_ptr);
+int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list);
 
 #endif
