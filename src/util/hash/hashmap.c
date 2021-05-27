@@ -138,8 +138,9 @@ void hashmap_free(hashmap_t** map){
 }
 
 int hashmap_get_by_key(hashmap_t* map, const char* key, void** data){
-    unsigned long hash = (map->hash_funct(key, map->nlist)) % (map->nelem);
+    if(map == NULL) return -1;
 
+    unsigned long hash = (map->hash_funct(key, map->nlist)) % (map->nlist);
     node_t* curr = map->list[hash]->head;
     *data = NULL;
 
@@ -148,6 +149,7 @@ int hashmap_get_by_key(hashmap_t* map, const char* key, void** data){
             *data = curr->data;
             return 0;
         }
+        curr = curr->next;
     }
 
     return -1;
@@ -157,12 +159,13 @@ bool hashmap_contains(hashmap_t* map, const char* key){
     if(map == NULL) return false;
 
     unsigned long hash = (map->hash_funct(key, map->nlist)) % (map->nlist);
-    debug("hash = %ld\n");
     node_t* curr = map->list[hash]->head;
 
-    while(curr != NULL)
+    while(curr != NULL) {
         if(strcmp(key, curr->key) == 0)
             return true;    
+        curr = curr->next;
+    }
 
     return false;
 }

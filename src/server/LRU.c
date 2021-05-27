@@ -4,7 +4,7 @@ int expell_LRU(file_t** expelled_ptr){
     time_t least_time = -1;
     file_t* least_file = NULL;
     
-    if(files->nelem = 0){
+    if(files->nelem == 0){
         return -1;
     }
 
@@ -23,7 +23,7 @@ int expell_LRU(file_t** expelled_ptr){
 
     // least_file is != NULL
     char* path = least_file->path_name;
-    hashmap_remove(files, path, NULL, expelled_ptr);
+    hashmap_remove(files, path, NULL, (void**)expelled_ptr);
 
     // TODO: add mutex
     curr_state.files--;

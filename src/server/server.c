@@ -3,6 +3,7 @@
 
 server_config_t server_config;
 server_mode_t mode = ACCEPT_CONN;
+server_state_t curr_state;
 
 hashtbl_t* conn_client_table = NULL;
 
@@ -33,6 +34,8 @@ static inline int update_max(fd_set set, int fd_max);
 /**
  */
 static void files_node_cleaner(node_t* node);
+
+static void close_client(long fd_client);
 
 
 int main(int argc, char* argv[]){ 
@@ -82,6 +85,10 @@ int main(int argc, char* argv[]){
         perror("Error while creating hashmap");
         return -1;
     }
+
+    // ------ CURRENT SERVER STATE ------ //
+    curr_state.files = 0;
+    curr_state.space = 0;
 
     // --------- REQUEST QUEUE --------- //
     if( (request_queue = empty_list()) == NULL){
@@ -238,7 +245,7 @@ int main(int argc, char* argv[]){
                             perror("Error while removing file descriptor from hashtable");
                             return -1;
                         }
-                        close(result.fd_client);
+                        close_client(result.fd_client);
                         break;
                     
                     default: // ?? unknown ??
@@ -297,10 +304,7 @@ int main(int argc, char* argv[]){
 
     // closing all file descriptors still open
     hash_iter_t* iter = NULL;
-    if( (iter = malloc(sizeof(hash_iter_t))) == NULL){
-        perror("Error in iterator creation");
-        return -1;
-    }
+    iter = safe_malloc(sizeof(hash_iter_t));
     if(hash_iter_init(iter) == -1){
         perror("Error in iterator initialization");
         return -1;
@@ -324,10 +328,7 @@ int main(int argc, char* argv[]){
     // printing all files in memory
     #ifdef DEBUG
     iter = NULL;
-    if( (iter = malloc(sizeof(hash_iter_t))) == NULL){
-        perror("Error in iterator creation");
-        return -1;
-    }
+    iter = safe_malloc(sizeof(hash_iter_t));
     if(hash_iter_init(iter) == -1){
         perror("Error in iterator initialization");
         return -1;
@@ -344,9 +345,10 @@ int main(int argc, char* argv[]){
         }
 
         file_t* file = (file_t*)iter->current_pos->data;
-        printf("file path: %s\n", file->path_name);
-        printf("file lock: %ld\n", file->fd_lock);
-        printf("file last use: %ld\n", file->last_use);
+        printf("> list: %ld\n", iter->current_list);
+        printf(">>> file path: %s\n", file->path_name);
+        printf(">>> file lock: %ld\n", file->fd_lock);
+        printf(">>> file last use: %ld\n", file->last_use);
     }
     free(iter);
     #endif
@@ -450,7 +452,34 @@ void file_delete(file_t* file){
         free(file->path_name);
     if(file->contents != NULL)
         free(file->contents);
+    if(file->fd_open != NULL)
+        hashtbl_free(&(file->fd_open));
     
     free(file);
     debug("File deleted\n");
+}
+
+static void close_client(long fd_client){
+    if(fd_client == -1) return;
+
+    // closing connection
+    close(fd_client);
+
+    // closing files opened and/or locked by fd_client
+    hash_iter_t* iter = safe_malloc(sizeof(hash_iter_t));
+    hash_iter_init(iter);
+    int err;
+
+    safe_pthread_mutex_lock(&files_mtx);
+    while( (err = hashmap_iter_get_next(iter, files)) == 0){
+        file_t* curr_file = (file_t*)iter->current_pos->data;
+        // TODO: should I lock current file?
+        if(curr_file->fd_lock == fd_client) 
+            curr_file->fd_lock = -1;
+        hashtbl_remove(curr_file->fd_open, fd_client);
+    } if( err == -1 ){
+        return; // ? TODO: think
+    }
+    free(iter);
+    safe_pthread_mutex_unlock(&files_mtx);
 }
