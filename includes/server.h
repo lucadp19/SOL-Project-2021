@@ -6,6 +6,8 @@
 #include "util/list.h"
 #include "util/hash.h"
 
+#include "server-api-protocol.h"
+
 typedef struct {
     unsigned int n_workers;
     size_t max_space;
@@ -18,8 +20,15 @@ typedef struct {
     size_t space;
 } server_state_t;
 
+typedef enum {
+    MW_SUCCESS,
+    MW_CLOSE,
+    MW_FATAL_ERROR,
+    MW_NON_FATAL_ERROR
+} worker_code_t;
+
 typedef struct {
-    int code;
+    worker_code_t code;
     long fd_client;
 } worker_res_t;
 
@@ -76,6 +85,17 @@ void* sig_handler_thread(void* arg);
 int install_workers(pthread_t* worker_ids, int** worker_pipes);
 void* worker_thread(void* arg);
 
+/**
+ * Deals with an openFile request from the API.
+ * Can return:
+ *      SA_SUCCESS  in case of success;
+ *      SA_ERROR    if there is an unspecified error
+ *      SA_CLOSE    if the client closed its connection
+ *      SA_EXISTS   if the client is trying to create an already existing file
+ *      SA_NO_FILE  if the client is trying to open a non-existing file
+ *      SA_ALREADY_LOCKED
+ *                  if the client is trying to lock an already locked file
+ */
 int open_file(long fd_client);
 
 int add_file_to_fs(file_t* file);

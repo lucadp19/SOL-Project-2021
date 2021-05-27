@@ -231,16 +231,24 @@ int main(int argc, char* argv[]){
                 }
             
                 switch (result.code){
-                    case 0: // success :)
+                    case MW_NON_FATAL_ERROR: 
+                        debug("There has been a non-fatal error.\n");
+                    case MW_SUCCESS: // success :)
                         FD_SET(result.fd_client, &set);
                         if(result.fd_client > fd_max) fd_max = result.fd_client;
                         break;
 
-                    case 1: // closing connection
-                        #ifndef DEBUG
-                            printf("Closed connection with client %ld!\n", result.fd_client);
-                            fflush(stdout);
-                        #endif
+                    case MW_CLOSE: // closing connection
+                        debug("Closed connection with client %ld!\n", result.fd_client);
+                        if( hashtbl_remove(conn_client_table, result.fd_client) == -1){
+                            perror("Error while removing file descriptor from hashtable");
+                            return -1;
+                        }
+                        close_client(result.fd_client);
+                        break;
+                        
+                    case MW_FATAL_ERROR:
+                        debug("Fatal error in connection with client %ld. Closing connection.\n", result.fd_client);
                         if( hashtbl_remove(conn_client_table, result.fd_client) == -1){
                             perror("Error while removing file descriptor from hashtable");
                             return -1;

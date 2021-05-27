@@ -11,29 +11,27 @@ int open_file(long fd_client){
     int flags;
 
     if( (l = readn(fd_client, &pathname_len, sizeof(int))) == -1 ){
-        return -1;
-    } if (l == 0) return -2;
+        return SA_ERROR;
+    } if (l == 0) return SA_CLOSE;
     debug("pathname_len = %d\n", pathname_len);
 
-    if( (pathname = calloc((pathname_len + 1), sizeof(char))) == NULL){
-        return -3;
-    }
+    pathname = safe_calloc((pathname_len + 1), sizeof(char));
 
     if( (l = readn(fd_client, (void*)pathname, pathname_len+1)) == -1){
         free(pathname);
-        return -1;
+        return SA_ERROR;
     } if( l == 0 ) {
         free(pathname);
-        return -2;
+        return SA_CLOSE;
     }
     debug("pathname = <%s>\n", pathname);
 
     if( (l = readn(fd_client, &flags, sizeof(int))) == -1){
         free(pathname);
-        return -1;
+        return SA_ERROR;
     } if( l == 0 ) {
         free(pathname);
-        return -2;
+        return SA_CLOSE;
     }
     debug("flag = %d\n", flags);
 
@@ -43,9 +41,9 @@ int open_file(long fd_client){
         // already contained
         if(hashmap_contains(files, pathname)){
             safe_pthread_mutex_unlock(&files_mtx);
-            debug("Already contained!\n");
+            debug("File already exists! :(\n");
             free(pathname);
-            return -2;
+            return SA_EXISTS;
         }
 
         file_t* file;
@@ -55,13 +53,14 @@ int open_file(long fd_client){
         if(curr_state.files == server_config.max_files){
             expell_LRU(&expelled);
         }
+        // TODO: what should I do with this file?!
 
         hashmap_insert(&files, pathname, file);
 
         debug("File added to fs!\n");
         safe_pthread_mutex_unlock(&files_mtx);
 
-        return 0;     
+        return SA_SUCCESS;     
     }
 
     // opening already created file
@@ -72,13 +71,12 @@ int open_file(long fd_client){
 
         free(pathname);
         debug("File doesn't exist!\n");
-        return -3;
+        return SA_NO_FILE;
     } else debug("File exists!\n");
 
     file_t* file;
-    if( hashmap_get_by_key(files, pathname, (void**)(&file)) == -1){
-        debug("File not found.\n");
-    }
+    // cannot return -1 because file exists
+    hashmap_get_by_key(files, pathname, (void**)(&file));
 
     debug("File path: %s\n", file->path_name);
     safe_pthread_mutex_lock(&(file->file_mtx));
@@ -90,7 +88,7 @@ int open_file(long fd_client){
 
             free(pathname);
             debug("File is already locked.\n");
-            return -4;
+            return SA_ALREADY_LOCKED;
         } else 
             file->fd_lock = fd_client;
     }
@@ -102,7 +100,7 @@ int open_file(long fd_client){
     safe_pthread_mutex_unlock(&files_mtx);
 
     free(pathname);
-    return 0;
+    return SA_SUCCESS;
 }
 
 static int create_file(file_t** file, char* pathname, long flags, long fd_client){

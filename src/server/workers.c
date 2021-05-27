@@ -55,13 +55,18 @@ void* worker_thread(void* arg){
 
         int l;
         op_code_t op_code;
-        if( (l = readn(fd_client, &op_code, sizeof(op_code_t))) == -1){
-            perror("Error readn");
-            return (void*)-1l; // TODO: what should I do in this case?
+
+        if( (l = readn(fd_client, &op_code, sizeof(op_code_t))) == -1){ // error in reading
+            result.code = MW_FATAL_ERROR;
+            if( writen(pipe[W_ENDP], &result, sizeof(worker_res_t)) == -1){
+                perror("Error writen");
+                return (void*)-1l; // TODO: same thing :(
+            }
+            continue;
         }
 
         if( l == 0 ){ // closed connection!
-            result.code = 1;
+            result.code = MW_CLOSE;
             if( writen(pipe[W_ENDP], &result, sizeof(worker_res_t)) == -1){
                 perror("Error writen");
                 return (void*)-1l; // TODO: same thing :(
@@ -73,14 +78,49 @@ void* worker_thread(void* arg){
 
         switch (op_code) {
             case OPEN_FILE: {
-                if (open_file(fd_client) == 0)
-                    result.code = 0;
-                else result.code = -1;
+                int res = open_file(fd_client);
+
+                // setting result code for main thread
+                if(res == SA_SUCCESS)
+                    result.code = MW_SUCCESS;
+                else if(res == SA_CLOSE || res == SA_ERROR)
+                    result.code = MW_FATAL_ERROR;
+                else result.code = MW_NON_FATAL_ERROR;
+
+                // setting result code for client
+                int err;
+                // TODO: maybe make function res -> errno
+                switch(res){
+                    case SA_SUCCESS:
+                        err = 0;
+                        break;
+                    case SA_EXISTS:
+                        err = EEXIST;
+                        break;
+                    case SA_NO_FILE:
+                        err = ENOENT;
+                        break;
+                    case SA_ALREADY_LOCKED:
+                        err = EBUSY;
+                        break;
+                    case SA_CLOSE:
+                    case SA_ERROR:
+                    default:
+                        err = -1;
+                        break;
+                }
+
+                if( writen(fd_client, &err, sizeof(int)) == -1){
+                    perror("Error in writing to client");
+                    result.code = MW_FATAL_ERROR;
+                    break;
+                }
+
                 break;
             }
 
             default:
-                result.code = -1;
+                result.code = MW_FATAL_ERROR;
                 break;
         }
 

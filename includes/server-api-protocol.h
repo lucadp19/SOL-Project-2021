@@ -13,4 +13,17 @@ typedef enum {
     REMOVE_FILE
 } op_code_t;
 
+// ---------- CONSTANTS ---------- //
+
+#define SA_SUCCESS 0
+#define SA_ERROR  -1
+#define SA_CLOSE  -2
+
+// --- Opening/Creation --- //
+#define SA_EXISTS         -10
+#define SA_NO_FILE        -11
+#define SA_ALREADY_LOCKED -12
+
+
+
 #endif
