@@ -80,6 +80,33 @@ void safe_pthread_cond_broadcast(pthread_cond_t* cond){
     }
 }
 
+void* safe_malloc(size_t size){
+    void* buf;
+    if( (buf = malloc(size)) == NULL){
+        perror("Error in memory allocation (malloc)");
+        exit(EXIT_FAILURE);
+    }
+    return buf;
+}
+
+void* safe_calloc(size_t nmemb, size_t size){
+    void* buf;
+    if( (buf = calloc(nmemb, size)) == NULL){
+        perror("Error in memory allocation (calloc)");
+        exit(EXIT_FAILURE);
+    }
+    return buf;
+}
+
+void* safe_realloc(void* ptr, size_t size){
+    void* buf;
+    if( (buf = realloc(ptr, size)) == NULL){
+        perror("Error in memory allocation (realloc)");
+        exit(EXIT_FAILURE);
+    }
+    return buf;
+}
+
 int readn(long fd, void *buf, size_t size) {
     size_t left = size;
     int r;

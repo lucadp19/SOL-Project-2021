@@ -87,6 +87,29 @@ void safe_pthread_cond_signal(pthread_cond_t* cond);
  */
 void safe_pthread_cond_broadcast(pthread_cond_t* cond);
 
+// -------------- ALLOCATION -------------- //
+
+/**
+ * Tries to allocate size bytes of memory; 
+ * on success returns a pointer to the newly allocated memory,
+ * on error aborts the process.
+ */
+void* safe_malloc(size_t size);
+
+/**
+ * Tries to allocate an array of nmemb elements of size bytes each; 
+ * on success returns a pointer to the newly allocated memory,
+ * on error aborts the process.
+ */
+void* safe_calloc(size_t nmemb, size_t size);
+
+/**
+ * Tries to change the size of the block pointed by ptr to size bytes;
+ * on success returns a pointer to the newly allocated memory,
+ * on error aborts the process.
+ */
+void* safe_realloc(void* ptr, size_t size);
+
 // ---------------- PIPES ---------------- //
 
 /**
