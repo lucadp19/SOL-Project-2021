@@ -4,7 +4,7 @@
 
 static int create_file(file_t** file, char* pathname, long flags, long fd_client);
 
-int open_file(long fd_client){
+int open_file(int worker_no, long fd_client){
     int l;
     char* pathname = NULL;
     int pathname_len;
@@ -59,6 +59,20 @@ int open_file(long fd_client){
 
         debug("File added to fs!\n");
         safe_pthread_mutex_unlock(&files_mtx);
+        // logging info
+        if( IS_FLAG_SET(flags, O_LOCK)) {
+            logger(
+                "[THREAD %d] [OPEN_FILE_SUCCESS][LOCK][CREATE] Successfully created locked file \"%s\".\n", 
+                worker_no, 
+                pathname
+            );
+        } else {
+            logger(
+                "[THREAD %d] [OPEN_FILE_SUCCESS][CREATE] Successfully created file \"%s\".\n", 
+                worker_no, 
+                pathname
+            );
+        }
 
         return SA_SUCCESS;     
     }
@@ -99,7 +113,22 @@ int open_file(long fd_client){
     safe_pthread_mutex_unlock(&(file->file_mtx));
     safe_pthread_mutex_unlock(&files_mtx);
 
+    // logging info
+    if( IS_FLAG_SET(flags, O_LOCK)) {
+        logger(
+            "[THREAD %d] [OPEN_FILE_SUCCESS][LOCK] Successfully opened locked file \"%s\".\n", 
+            worker_no, 
+            pathname
+        );
+    } else {
+        logger(
+            "[THREAD %d] [OPEN_FILE_SUCCESS] Successfully opened file \"%s\".\n", 
+            worker_no, 
+            pathname
+        );
+    }
     free(pathname);
+
     return SA_SUCCESS;
 }
 

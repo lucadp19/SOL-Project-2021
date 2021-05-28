@@ -1,7 +1,7 @@
 #include "server.h"
 #include "server-api-protocol.h"
 
-int close_file(long fd_client){
+int close_file(int worker_no, long fd_client){
     int l;
     char* pathname = NULL;
     int pathname_len;
@@ -40,6 +40,7 @@ int close_file(long fd_client){
     safe_pthread_mutex_unlock(&(file->file_mtx));
     safe_pthread_mutex_unlock(&files_mtx);
 
+    logger("[THREAD %d] [CLOSE_FILE_SUCCESS] Successfully closed file \"%s\".", worker_no, pathname);
     free(pathname);
     return SA_SUCCESS;
 }

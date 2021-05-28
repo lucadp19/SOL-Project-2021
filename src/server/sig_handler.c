@@ -6,6 +6,7 @@ void* sig_handler_thread(void* arg){
     int* pipe = (int*)arg;
 
     debug("Hello, I'm the handler thread!\n"); 
+    logger("[SIG-HANDLER] Started signal handler thread.\n");
 
     while(true){
         int sig;
@@ -23,7 +24,7 @@ void* sig_handler_thread(void* arg){
                 mode = CLOSE_SERVER;
 
                 debug("\nReceived signal, closing server!\n");
-
+                logger("[SIG-HANDLER] Received signal to close server.\n");
                 // signaling to main thread
                 close(pipe[W_ENDP]);
                 pipe[W_ENDP] = -1;
@@ -34,6 +35,7 @@ void* sig_handler_thread(void* arg){
             case SIGHUP:
                 mode = REFUSE_CONN;
 
+                logger("[SIG-HANDLER] Received signal to refuse incoming connections.\n");
                 // signaling to main thread
                 close(pipe[W_ENDP]);
                 pipe[W_ENDP] = -1;

@@ -58,6 +58,10 @@ dkms.conf
 bin/*
 !bin/.keep
 
+# Logs directory except .keep file
+logs/*
+!logs/.keep
+
 # vgcore files produced by valgrind
 vgcore.*
 

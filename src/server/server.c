@@ -7,6 +7,7 @@ server_mode_t mode = ACCEPT_CONN;
 server_state_t curr_state;
 
 FILE* log_file = NULL;
+pthread_mutex_t log_file_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 hashtbl_t* conn_client_table = NULL;
 
@@ -40,9 +41,6 @@ static void files_node_cleaner(node_t* node);
 
 static void close_client(long fd_client);
 
-static int init_log_file();
-
-
 int main(int argc, char* argv[]){ 
     if(argc > 2){
         fprintf(stderr, "There must be at most one additional argument: the path to the config file.\n");
@@ -55,9 +53,11 @@ int main(int argc, char* argv[]){
     if( get_server_config(config_path) == -1){
         return -1;
     }
+
     // ----------- LOG FILE ----------- //
     if( init_log_file() == -1 )
         return -1;
+    logger("Read config file and started server.\n");
 
     // ----- MAX FILE DESCRIPTOR ----- //
     long fd_max = -1;
@@ -104,6 +104,8 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
+    logger("Initialized several data structures.\n");
+
     // ------ WORKER CREATION ------ //
     pthread_t* worker_tids = NULL;
     int** worker_pipes = NULL;
@@ -117,16 +119,10 @@ int main(int argc, char* argv[]){
     for(int i = 0; i < server_config.n_workers; i++) worker_tids[i] = -1;
 
     // allocating memory for worker pipes' vector
-    if( (worker_pipes = (int**)calloc(server_config.n_workers, sizeof(int*))) == NULL){
-        perror("Error in calloc for worker pipes");
-        return -1;
-    }
+    worker_pipes = (int**)safe_calloc(server_config.n_workers, sizeof(int*));
     // allocating memory for worker pipes and creating pipes
     for(int i = 0; i < server_config.n_workers; i++){
-        if( (worker_pipes[i] = (int*)calloc(2, sizeof(int*))) == NULL){
-            perror("Error in calloc for worker pipes");
-            return -1;
-        }
+        worker_pipes[i] = (int*)safe_calloc(2, sizeof(int*));
         // setting pipes to -1
         pipe_init(worker_pipes[i]);
 
@@ -137,6 +133,7 @@ int main(int argc, char* argv[]){
         if(worker_pipes[i][R_ENDP] > fd_max) fd_max = worker_pipes[i][R_ENDP];
     }
 
+    logger("Installing worker threads.\n");
     if( install_workers(worker_tids, worker_pipes) == -1){
         perror("Error in creating workers");
         return -1;
@@ -166,6 +163,7 @@ int main(int argc, char* argv[]){
         return -1;
     }
     if(fd_listen > fd_max) fd_max = fd_listen;
+    logger("[MAIN] Created listening socket.\n");
 
     // ------------ FD_SET ------------ //
     fd_set set, tmpset;
@@ -202,6 +200,7 @@ int main(int argc, char* argv[]){
                 }
 
                 debug("New connection! File descriptor: %ld.\n", fd_client);
+                logger("[MAIN] [NEW_CONN] New client connected: file descriptor is %ld.\n", fd_client);
 
                 // adding client to master set
                 FD_SET(fd_client, &set);
@@ -261,6 +260,7 @@ int main(int argc, char* argv[]){
                             perror("Error while removing file descriptor from hashtable");
                             return -1;
                         }
+                        logger("[MAIN] As a result of a fatal error in communicating with client %ld, the connection will be closed.\n", result.fd_client);
                         close_client(result.fd_client);
                         break;
                     
@@ -276,6 +276,7 @@ int main(int argc, char* argv[]){
             long fd_client = i;
 
             debug("New request from client %ld!\n", fd_client);
+            logger("[MAIN] [CLIENT_REQ] New request from client %ld.\n", fd_client);
 
             // inserting it into the request queue
             safe_pthread_mutex_lock(&request_queue_mtx);
@@ -298,6 +299,7 @@ int main(int argc, char* argv[]){
 
         // no more connections
         if(mode == REFUSE_CONN && conn_client_table->nelem == 0){
+            logger("[MAIN] No more connections. Closing server.\n");
             mode = CLOSE_SERVER;
             // waking up threads blocked on a pthread_cond_wait
             safe_pthread_cond_broadcast(&request_queue_nonempty);
@@ -391,6 +393,7 @@ int main(int argc, char* argv[]){
         worker_pipes = NULL;
     }
 
+    logger("[MAIN] Closing server.\n");
     fclose(log_file);
 
     return 0;
@@ -482,6 +485,7 @@ static void close_client(long fd_client){
 
     // closing connection
     close(fd_client);
+    logger("[MAIN] [CLOSE_CONN] Closed connection with client %ld.\n", fd_client);
 
     // closing files opened and/or locked by fd_client
     hash_iter_t* iter = safe_malloc(sizeof(hash_iter_t));
@@ -500,37 +504,4 @@ static void close_client(long fd_client){
     }
     free(iter);
     safe_pthread_mutex_unlock(&files_mtx);
-}
-
-static int init_log_file(){
-    struct tm curr_time;
-    char* log_file_path;
-    time_t curr_time_abs = time(NULL);
-
-    localtime_r(&curr_time_abs, &curr_time);
-    int dir_path_len = strlen(server_config.log_dir_path);
-
-    log_file_path = safe_malloc((dir_path_len + 30) * sizeof(char));
-    memset(log_file_path, '\0', sizeof(char)*(dir_path_len + 30));
-    // writing info on log_file_path string
-    snprintf(
-        log_file_path, dir_path_len + 30,
-        "%s/log-%4d-%02d-%02d-%02d:%02d:%02d.txt", 
-        server_config.log_dir_path,
-        curr_time.tm_year + 1900,
-        curr_time.tm_mon + 1,
-        curr_time.tm_mday,
-        curr_time.tm_hour,
-        curr_time.tm_min,
-        curr_time.tm_sec
-    );
-
-    debug("Log file path is: %s\n", log_file_path);
-    if( (log_file = fopen(log_file_path, "w")) == NULL){
-        fprintf(stderr, "Fatal error in creating log file. Aborting.\n");
-        return -1;
-    }
-    free(log_file_path);
-
-    return 0;
 }

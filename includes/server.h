@@ -29,6 +29,11 @@ typedef enum {
 } worker_code_t;
 
 typedef struct {
+    int worker_no;
+    int* pipe;
+} worker_arg_t;
+
+typedef struct {
     worker_code_t code;
     long fd_client;
 } worker_res_t;
@@ -71,6 +76,7 @@ extern server_mode_t mode;
 extern server_state_t curr_state;
 
 extern FILE* log_file;
+extern pthread_mutex_t log_file_mtx;
 
 extern list_t* request_queue;
 extern pthread_mutex_t request_queue_mtx;
@@ -88,6 +94,9 @@ void* sig_handler_thread(void* arg);
 int install_workers(pthread_t* worker_ids, int** worker_pipes);
 void* worker_thread(void* arg);
 
+int init_log_file();
+void logger(const char* fmt, ...);
+
 /**
  * Deals with an openFile request from the API.
  * Can return:
@@ -99,7 +108,7 @@ void* worker_thread(void* arg);
  *      SA_ALREADY_LOCKED
  *                  if the client is trying to lock an already locked file
  */
-int open_file(long fd_client);
+int open_file(int worker_no, long fd_client);
 /**
  * Deals with a closeFile request from the API.
  * Can return:
@@ -108,7 +117,7 @@ int open_file(long fd_client);
  *      SA_CLOSE    if the client closed its connection
  *      SA_NO_FILE  if the client is trying to close a non-existing file
  */
-int close_file(long fd_client);
+int close_file(int worker_no, long fd_client);
 
 int add_file_to_fs(file_t* file);
 void file_delete(file_t* file);
