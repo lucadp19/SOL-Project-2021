@@ -77,12 +77,15 @@ int write_expelled_files(const char* dirname){
         char* path;
         size_and_buf_t* file;
 
-        if( (l = readn(fd_sock, &path_len, sizeof(int)) == -1) || l == 0) {
+        debug("reading pathlen\n");
+        if( (l = readn(fd_sock, &path_len, sizeof(int))) == -1 || l == 0){
+            debug("l = %d\n", l);
             list_delete(&files, custom_free_funct);
             return -1;
         }
 
         // ended list
+        debug("pathlen is zero!");
         if( path_len == 0 ) break;
 
         file = safe_calloc(1, sizeof(size_and_buf_t));
@@ -90,14 +93,14 @@ int write_expelled_files(const char* dirname){
         // must read another file
         path = safe_calloc(path_len + 1, sizeof(char));
 
-        if( (l = readn(fd_sock, path, path_len + 1) == -1) || l == 0) {
+        if( (l = readn(fd_sock, path, path_len + 1)) == -1 || l == 0) {
             list_delete(&files, custom_free_funct);
             free((void*)path);
             free(file);
             return -1;
         }
 
-        if( (l = readn(fd_sock, &(file->size), sizeof(int)) == -1) || l == 0) {
+        if( (l = readn(fd_sock, &(file->size), sizeof(int))) == -1 || l == 0) {
             list_delete(&files, custom_free_funct);
             free((void*)path);
             free(file);
@@ -108,7 +111,7 @@ int write_expelled_files(const char* dirname){
         if(file->size == 0) {
             file->buf = safe_malloc(file->size);
 
-            if( (l = readn(fd_sock, file->buf, file->size) == -1) || l == 0) {
+            if( (l = readn(fd_sock, file->buf, file->size)) == -1 || l == 0) {
                 list_delete(&files, custom_free_funct);
                 free((void*)path);
                 free(file->buf);
@@ -154,7 +157,7 @@ int write_expelled_files(const char* dirname){
         }
 
         size_and_buf_t* file = curr->data;
-        if( fwrite(file->buf, 1, file->size, to_write) < file->size){
+        if( file->size > 0 && fwrite(file->buf, 1, file->size, to_write) < file->size){
             fclose(to_write);
             list_delete(&files, custom_free_funct);
             free(path_to_write);
@@ -166,6 +169,7 @@ int write_expelled_files(const char* dirname){
     
     if(path_to_write != NULL) free(path_to_write);
     list_delete(&files, custom_free_funct);
+    debug("still no error\n");
     
     return 0;
 }

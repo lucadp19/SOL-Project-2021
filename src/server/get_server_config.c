@@ -46,6 +46,8 @@ int get_server_config(const char* path_to_config){
         if(strncmp(current_opt, "max_space", 9) == 0 && !max_space){
             max_space = true;
             FSCANF(config, "%lu", &server_config.max_space, err);
+            // max_space is in MBytes
+            server_config.max_space *= 1000000;
             debug("option max_space = %lu\n", server_config.max_space);
             continue;
         }

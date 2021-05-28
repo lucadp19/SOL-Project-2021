@@ -25,8 +25,9 @@ int expell_LRU(file_t** expelled_ptr){
     char* path = least_file->path_name;
     hashmap_remove(files, path, NULL, (void**)expelled_ptr);
 
-    // TODO: add mutex
+    // no need for mutex, it has already been locked
     curr_state.files--;
+    curr_state.space -= (*expelled_ptr)->size;
 
     return 0;
 }
@@ -34,7 +35,7 @@ int expell_LRU(file_t** expelled_ptr){
 int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list){
     size_t freed = 0;
 
-    // TODO: add mutex
+    // no need for mutex, it has already been locked
     if(size_to_free > curr_state.space)
         return -1;
 
@@ -46,6 +47,47 @@ int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list){
         list_push_back(expelled_list, NULL, expelled);
         freed = freed + expelled->size;
     }
+
+    return 0;
+}
+
+int send_expelled_files(int worker_no, long fd_client, list_t* expelled){
+    if(expelled == NULL) return -1;
+
+    debug("HELLO1\n");
+
+    node_t* curr = expelled->head;
+    debug("Hello from before the while loop\n");
+    if(curr == NULL)
+        debug("curr is null\n");
+    while(curr != NULL){
+        int pathname_len = strlen(curr->key);
+        file_t* curr_file = (file_t*)curr->data;
+
+        debug("hello from inside the while loop\n");
+        debug("filename = %s\n", curr->key);
+
+        if( writen(fd_client, &pathname_len, sizeof(int)) == -1)
+            return -1;
+        if( writen(fd_client, (void*)curr->key, (pathname_len+1) * sizeof(char)) == -1)
+            return -1;
+        
+        if( writen(fd_client, &curr_file->size, sizeof(size_t)) == -1)
+            return -1;
+        
+        if( curr_file->size != 0 && writen(fd_client, curr_file->contents, curr_file->size) == -1)
+            return -1;
+
+        curr = curr->next;
+    }
+
+    int terminating_zero = 0;
+    debug("Finished list\n");
+    int write_err;
+    if( (write_err = writen(fd_client, &terminating_zero, sizeof(int))) == -1)
+        return -1;
+    if(write_err == 0) debug("write returned 0!\n");
+    debug("about to return 0...\n");
 
     return 0;
 }

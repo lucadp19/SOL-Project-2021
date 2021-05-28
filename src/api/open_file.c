@@ -13,15 +13,19 @@ int openFile(const char* pathname, int flags){
     
     // want to open file
     op_code_t op_code = OPEN_FILE;
+    debug("Writing opcode\n");
     if( writen(fd_sock, (void*)&op_code, sizeof(op_code_t)) == -1)
         return -1;
 
     // writing parameters
     int len = strlen(pathname);
+    debug("Writing len\n");
     if( writen(fd_sock, &len, sizeof(int)) == -1)
         return -1;
+    debug("Writing pathname");
     if( writen(fd_sock, (void*)pathname, len + 1) == -1)
         return -1;
+    debug("Writing flags");
     if( writen(fd_sock, &flags, sizeof(int)) == -1)
         return -1;
     

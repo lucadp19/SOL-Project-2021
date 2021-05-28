@@ -4,7 +4,9 @@
 
 server_config_t server_config;
 server_mode_t mode = ACCEPT_CONN;
+
 server_state_t curr_state;
+pthread_mutex_t curr_state_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 FILE* log_file = NULL;
 pthread_mutex_t log_file_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -35,9 +37,6 @@ static void unlink_socket();
  * If no descriptor is set returns -1.
  */
 static inline int update_max(fd_set set, int fd_max);
-/**
- */
-static void files_node_cleaner(node_t* node);
 
 static void close_client(long fd_client);
 
@@ -457,7 +456,7 @@ static inline int update_max(fd_set set, int fd_max){
     return -1;
 }
 
-static void files_node_cleaner(node_t* node){
+void files_node_cleaner(node_t* node){
     if(node == NULL) return;
 
     file_t* file = (file_t*)node->data;

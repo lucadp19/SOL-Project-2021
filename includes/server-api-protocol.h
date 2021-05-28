@@ -24,6 +24,11 @@ typedef enum {
 #define SA_NO_FILE        -11
 #define SA_ALREADY_LOCKED -12
 
+// --------- Use --------- //
+#define SA_NOT_LOCKED -20
+#define SA_NOT_EMPTY  -21
+#define SA_TOO_BIG    -22
+
 
 
 #endif

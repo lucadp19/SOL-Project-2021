@@ -73,7 +73,9 @@ typedef struct {
 // ------ GLOBAL VARIABLES ------ //
 extern server_config_t server_config;
 extern server_mode_t mode;
+
 extern server_state_t curr_state;
+extern pthread_mutex_t curr_state_mtx;
 
 extern FILE* log_file;
 extern pthread_mutex_t log_file_mtx;
@@ -118,11 +120,22 @@ int open_file(int worker_no, long fd_client);
  *      SA_NO_FILE  if the client is trying to close a non-existing file
  */
 int close_file(int worker_no, long fd_client);
+/**
+ * Deals with a writeFile request from the API.
+ * Can return:
+ *      SA_SUCCESS  in case of success
+ *      SA_ERROR    if there is an unspecified error
+ *      SA_CLOSE    if the client closed its connection
+ *      SA_NO_FILE  if the client is trying to write into a non-existing file
+ */
+int write_file(int worker_no, long fd_client);
 
 int add_file_to_fs(file_t* file);
+void files_node_cleaner(node_t* node);
 void file_delete(file_t* file);
 
 int expell_LRU(file_t** file_ptr);
 int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list);
+int send_expelled_files(int worker_no, long fd_client, list_t* to_expell);
 
 #endif

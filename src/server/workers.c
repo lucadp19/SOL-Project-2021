@@ -12,7 +12,7 @@ int install_workers(pthread_t worker_tids[], int** worker_pipes){
 
     int err;
 
-    for(int i = 0; i < server_config.n_workers; i++){
+for(int i = 0; i < server_config.n_workers; i++){
         worker_arg_t* arg = safe_calloc(1, sizeof(worker_arg_t));
         arg->worker_no = i;
         arg->pipe = worker_pipes[i];
@@ -131,6 +131,36 @@ void* worker_thread(void* arg){
                     );
                     result.code = MW_NON_FATAL_ERROR;
                 }
+
+                if( writen(fd_client, &res, sizeof(int)) == -1){
+                    perror("Error in writing to client");
+                    result.code = MW_FATAL_ERROR;
+                    break;
+                }
+
+                break;
+            }
+            case WRITE_FILE: {
+                logger("[THREAD %d] [WRITE_FILE] Request from client %ld is WRITE_FILE.\n", worker_no, fd_client);
+                int res = write_file(worker_no, fd_client);
+
+                debug("hey ya, res is %d\n", res);
+                
+                // setting result code for main thread
+                if(res == SA_SUCCESS)
+                    result.code = MW_SUCCESS;
+                else if(res == SA_CLOSE || res == SA_ERROR){
+                    logger("[THREAD %d] [WRITE_FILE_FAIL] Fatal error in WRITE_FILE request from client %ld.\n", worker_no, fd_client);
+                    result.code = MW_FATAL_ERROR;
+                } else {
+                    logger(
+                        "[THREAD %d] [WRITE_FILE_FAIL] Non-fatal error in WRITE_FILE request from client %ld: %s.\n", 
+                        worker_no, fd_client, thread_res_to_msg(res)
+                    );
+                    result.code = MW_NON_FATAL_ERROR;
+                }
+
+                debug("stll no error\n");
 
                 if( writen(fd_client, &res, sizeof(int)) == -1){
                     perror("Error in writing to client");

@@ -4,6 +4,7 @@
 #include "server-api-protocol.h"
 
 int writeFile(const char* pathname, const char* dirname){
+    debug(">> Writing file!\n");
     if(fd_sock == -1){
         errno = ENOTCONN;
         return -1;
@@ -19,6 +20,7 @@ int writeFile(const char* pathname, const char* dirname){
     // reset last operation
     RESET_LAST_OP;
 
+    debug("Reading file from disk...\n");
     // ----- READING FILE ------ //
     FILE* file;
     if( (file = fopen(pathname, "rb")) == NULL ){
@@ -44,6 +46,7 @@ int writeFile(const char* pathname, const char* dirname){
     }
     fclose(file);
     
+    debug("File read! Now sending it to server...\n");
     // ----- WRITING TO SERVER ----- //
     op_code_t op_code = WRITE_FILE;
     // writing op_code
@@ -72,20 +75,27 @@ int writeFile(const char* pathname, const char* dirname){
 
     free(buffer);
 
+    debug("File sent! Reading result from server...\n");
     // ---- READING RESULT FROM SERVER ---- //
+
+    // reading and writing expelled files
+    if( write_expelled_files(dirname) == -1){
+        debug("I'm standing no more");
+        return -1;
+    }
+    int l;
+
+    debug("I'm still standing\n");
+
     // reading answer
     int res;
-    int l;
     if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
         // TODO: EBADF because bad communication ?
         errno = EBADF;
         return -1;
     }
-
-    // reading and writing expelled files
-    if( write_expelled_files(dirname) == -1)
-        return -1;
-
+    debug("Result is %d\n", res);
     errno = convert_res_to_errno(res);
-    return (0 ? res == 0 : -1);
+    if(res != 0) return -1;
+    return 0;
 }

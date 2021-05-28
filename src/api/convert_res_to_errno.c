@@ -17,6 +17,4 @@ int convert_res_to_errno(int res){
         default:
             return ENOTRECOVERABLE;
     }
-
-    return ENOTRECOVERABLE; 
 }

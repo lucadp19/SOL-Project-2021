@@ -49,13 +49,21 @@ int open_file(int worker_no, long fd_client){
         file_t* file;
         create_file(&file, pathname, flags, fd_client);
         
-        file_t* expelled;
+        file_t* expelled = NULL;
+        safe_pthread_mutex_lock(&curr_state_mtx);
+        debug("curr_state.files = %d, server_config.max_files = %d", curr_state.files, server_config.max_files);
         if(curr_state.files == server_config.max_files){
             expell_LRU(&expelled);
         }
-        // TODO: what should I do with this file?!
+        safe_pthread_mutex_unlock(&curr_state_mtx);
+        // TODO: what should I do with this file?! => delete it probably
+        file_delete(expelled);
 
         hashmap_insert(&files, pathname, file);
+
+        safe_pthread_mutex_lock(&curr_state_mtx);
+        curr_state.files++;
+        safe_pthread_mutex_unlock(&curr_state_mtx);
 
         debug("File added to fs!\n");
         safe_pthread_mutex_unlock(&files_mtx);
