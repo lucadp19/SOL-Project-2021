@@ -4,6 +4,13 @@
 
 int closeFile(const char* pathname){
     debug(">> Closing file!\n");
+    if(fd_sock == -1){
+        errno = ENOTCONN;
+        return -1;
+    }
+    // last operation isn't an open file anymore
+    RESET_LAST_OP;
+
     // want to close file
     op_code_t op_code = CLOSE_FILE;
     if( writen(fd_sock, (void*)&op_code, sizeof(op_code_t)) == -1)
