@@ -9,6 +9,11 @@ typedef struct {
     char* path;
 } op_t;
 
+typedef struct {
+    long size;
+    void* buf;
+} size_and_buf_t;
+
 /**
  * File descriptor for the currently connected socket.
  */
@@ -45,5 +50,6 @@ extern op_t last_op;
     } while(0)
 
 int write_expelled_files(const char* dirname);
+int convert_res_to_errno(int res);
 
 #endif

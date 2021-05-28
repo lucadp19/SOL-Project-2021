@@ -33,23 +33,20 @@ int openFile(const char* pathname, int flags){
     strncpy(last_op.path, pathname, len+1);
 
     // reading answer
-    int err;
+    int res;
     int l;
-    if( (l = readn(fd_sock, &err, sizeof(int))) == -1 || l == 0){
+    if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
         // TODO: EBADF because bad communication ?
         errno = EBADF;
         return -1;
     } 
-
-    if(err == -1){
-        // TODO: general error -> which errno should I choose? 
-        errno = EBADE;
-        return -1;
-    } else if(err != 0){
-        errno = err;
-        return -1;
+    
+    if(res != 0) {
+       last_op.success = false;
+       errno = convert_res_to_errno(res);
+       return -1;
     }
-
+    
     // everything worked out fine :D
     last_op.success = true;
     errno = 0;

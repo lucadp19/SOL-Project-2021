@@ -86,5 +86,6 @@ int writeFile(const char* pathname, const char* dirname){
     if( write_expelled_files(dirname) == -1)
         return -1;
 
-    return 0;
+    errno = convert_res_to_errno(res);
+    return (0 ? res == 0 : -1);
 }

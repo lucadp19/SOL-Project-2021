@@ -1,6 +1,8 @@
 #include "server.h"
 #include "server-api-protocol.h"
 
+static const char* thread_res_to_msg(int res);
+
 int install_workers(pthread_t worker_tids[], int** worker_pipes){
     if(worker_tids == NULL || worker_pipes == NULL){
         errno = EINVAL;
@@ -97,49 +99,14 @@ void* worker_thread(void* arg){
                     logger("[THREAD %d] [OPEN_FILE_FAIL] Fatal error in OPEN_FILE request from client %ld.\n", worker_no, fd_client);
                     result.code = MW_FATAL_ERROR;
                 } else {
-                    char* msg;
-                    switch(res){
-                        case SA_EXISTS: 
-                            msg = "file already existed";
-                            break;
-                        case SA_NO_FILE: 
-                            msg = "file doesn't exist";
-                            break;
-                        case SA_ALREADY_LOCKED:
-                            msg = "file was already locked";
-                            break;
-                    }
                     logger(
                         "[THREAD %d] [OPEN_FILE_FAIL] Non-fatal error in OPEN_FILE request from client %ld: %s.\n", 
-                        worker_no, fd_client, msg
+                        worker_no, fd_client, thread_res_to_msg(res)
                     );
                     result.code = MW_NON_FATAL_ERROR;
                 }
-
-                // setting result code for client
-                int err;
-                // TODO: maybe make function res -> errno
-                switch(res){
-                    case SA_SUCCESS:
-                        err = 0;
-                        break;
-                    case SA_EXISTS:
-                        err = EEXIST;
-                        break;
-                    case SA_NO_FILE:
-                        err = ENOENT;
-                        break;
-                    case SA_ALREADY_LOCKED:
-                        err = EBUSY;
-                        break;
-                    case SA_CLOSE:
-                    case SA_ERROR:
-                    default:
-                        err = -1;
-                        break;
-                }
-
-                if( writen(fd_client, &err, sizeof(int)) == -1){
+                
+                if( writen(fd_client, &res, sizeof(int)) == -1){
                     perror("Error in writing to client");
                     result.code = MW_FATAL_ERROR;
                     break;
@@ -158,37 +125,14 @@ void* worker_thread(void* arg){
                     logger("[THREAD %d] [CLOSE_FILE_FAIL] Fatal error in CLOSE_FILE request from client %ld.\n", worker_no, fd_client);
                     result.code = MW_FATAL_ERROR;
                 } else {
-                    char* msg;
-                    switch(res){
-                        case SA_NO_FILE: 
-                            msg = "file doesn't exist";
-                            break;
-                    }
                     logger(
                         "[THREAD %d] [CLOSE_FILE_FAIL] Non-fatal error in CLOSE_FILE request from client %ld: %s.\n", 
-                        worker_no, fd_client, msg
+                        worker_no, fd_client, thread_res_to_msg(res)
                     );
                     result.code = MW_NON_FATAL_ERROR;
                 }
 
-                // setting result code for client
-                int err;
-                // TODO: maybe make function res -> errno
-                switch(res){
-                    case SA_SUCCESS:
-                        err = 0;
-                        break;
-                    case SA_NO_FILE:
-                        err = ENOENT;
-                        break;
-                    case SA_CLOSE:
-                    case SA_ERROR:
-                    default:
-                        err = -1;
-                        break;
-                }
-
-                if( writen(fd_client, &err, sizeof(int)) == -1){
+                if( writen(fd_client, &res, sizeof(int)) == -1){
                     perror("Error in writing to client");
                     result.code = MW_FATAL_ERROR;
                     break;
@@ -218,4 +162,22 @@ void* worker_thread(void* arg){
 
     free(w_arg);
     return NULL;
+}
+
+static const char* thread_res_to_msg(int res){
+    switch(res){
+        case SA_SUCCESS:
+            return "success";
+        case SA_EXISTS: 
+            return "file already exists";
+        case SA_NO_FILE: 
+            return "file doesn't exist";
+        case SA_ALREADY_LOCKED:
+            return "file is already locked";
+        case SA_CLOSE:
+            return "client closed connection";
+        case SA_ERROR:
+        default:
+            return "general fatal error";
+    }
 }
