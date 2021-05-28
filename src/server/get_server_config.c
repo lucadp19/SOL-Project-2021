@@ -61,7 +61,13 @@ int get_server_config(const char* path_to_config){
         // sock_path
         if(strncmp(current_opt, "sock_path", 9) == 0 && !socket_name){
             socket_name = true;
-            FSCANF(config, "%s", server_config.socket_path, err);
+            // FSCANF(config, "%s", server_config.socket_path, err);
+            if( fgets(server_config.socket_path, 128, config) == NULL ){
+                fprintf(stderr, "Error in config file! Aborting.\n");
+                return -1;
+            }
+            // removing trailing newline
+            server_config.socket_path[strcspn(server_config.socket_path, "\n")] = '\0';
             debug("option sock_path = %s\n", server_config.socket_path);
             continue;
         }
@@ -69,7 +75,13 @@ int get_server_config(const char* path_to_config){
         // path_dlog
         if(strncmp(current_opt, "path_dlog", 9) == 0 && !log_file){
             log_file = true;
-            FSCANF(config, "%s", server_config.log_dir_path, err);
+            // FSCANF(config, "%s", server_config.log_dir_path, err);
+            if( fgets(server_config.log_dir_path, 128, config) == NULL ){
+                fprintf(stderr, "Error in config file! Aborting.\n");
+                return -1;
+            }
+            // removing trailing newline
+            server_config.log_dir_path[strcspn(server_config.log_dir_path, "\n")] = '\0';
             debug("option path_dlog = %s\n", server_config.log_dir_path);
             continue;
         }

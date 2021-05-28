@@ -40,7 +40,7 @@ int close_file(int worker_no, long fd_client){
     safe_pthread_mutex_unlock(&(file->file_mtx));
     safe_pthread_mutex_unlock(&files_mtx);
 
-    logger("[THREAD %d] [CLOSE_FILE_SUCCESS] Successfully closed file \"%s\".", worker_no, pathname);
+    logger("[THREAD %d] [CLOSE_FILE_SUCCESS] Successfully closed file \"%s\".\n", worker_no, pathname);
     free(pathname);
     return SA_SUCCESS;
 }
