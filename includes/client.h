@@ -42,7 +42,7 @@ extern bool p_option;
  */
 extern bool f_option;
 /**
- * True iff -w option was set.
+ * True iff -a option was set.
  */
 extern bool a_option;
 
@@ -58,10 +58,22 @@ typedef struct {
     long n_files;
 } str_long_pair_t;
 
+// ---------- FUNCTIONS ---------- //
 /**
  * Parses command line options given to the client program.
  * It returns 0 on success, -1 on error.
  */
-int parse_options(list_t* request_q, int argc, char* argv[]);
+int parse_options(list_t* request_list, int argc, char* argv[]);
+
+/**
+ * Checks if the parsed request list satisfies all the given requirements.
+ * If not, aborts the process.
+ */
+void validate_options();
+
+/** 
+ * Executes the parsed request list.
+ */
+int execute_requests();
 
 #endif

@@ -18,6 +18,7 @@ static void clean_req_node(node_t* node);
 static int add_to_current_time(long sec, long nsec, struct timespec* res);
 static void cleanup();
 
+#define TEST
 
 int main(int argc, char* argv[]){
     if( atexit(cleanup) == -1){
@@ -46,11 +47,8 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
-    if(!f_option){
-        fprintf(stderr, "Option -f must be present once and only once, but it wasn't specified.\n");
-        return -1;
-    }
-
+    // check that options respect the given restrictions
+    validate_options();
 
     // ------------ CONNECT ------------ //
     int err;
@@ -68,30 +66,93 @@ int main(int argc, char* argv[]){
     } else if( config.print_to_stdout )
         printf("Connected to %s!\n", config.socket);
 
-    // TODO: do things
-    debug("Testing open file");
-    // test: openFile
-    if( openFile("machine_head", O_CREATE) == -1){
-        perror("open file");
+#ifdef TEST
+    debug("Testing open-write-read file");
+    // test: writeFile
+    if(p_option){
+        if( openFile("gettys1.pdf", O_CREATE | O_LOCK) == -1){
+            perror("open file");
+            return -1;
+        }
+        // sleep(1);
+        if( writeFile("gettys1.pdf", "tests/copy") == -1){
+            perror("write file");
+            return -1;
+        }
+        sleep(1);
+        debug("Before second open file...\n");
+        if( openFile("gettys2.pdf", O_CREATE | O_LOCK) == -1){
+            perror("open file");
+            return -1;
+        }
+        // sleep(1);
+        if( writeFile("gettys2.pdf", "tests/copy") == -1){
+            perror("write file");
+            return -1;
+        }
+        sleep(1);
+        debug("Before third open file...\n");
+        if( openFile("gettys3.pdf", O_CREATE | O_LOCK) == -1){
+            perror("open file");
+            return -1;
+        }
+        // sleep(1);
+        if( writeFile("gettys3.pdf", "tests/copy") == -1){
+            perror("write file");
+            return -1;
+        }
+        sleep(1);
+        debug("Before fourth open file...\n");
+        if( openFile("gettys4.pdf", O_CREATE | O_LOCK) == -1){
+            perror("open file");
+            return -1;
+        }
+        // sleep(1);
+        if( writeFile("gettys4.pdf", "tests/copy") == -1){
+            perror("write file");
+            return -1;
+        }
+        sleep(1);
+        if( removeFile("gettys3.pdf") == -1){
+            perror("remove file");
+        }
+        sleep(1);
+        if( readNFiles(0, "tests/readNFiles") == -1){
+            perror("readNFiles");
+            return -1;
+        } 
+        // debug("Size of buffer = %d\n", size);
+    } else {
+        if( openFile("tests/blah1.txt", O_CREATE | O_LOCK) == -1){
+            perror("open file");
+            return -1;
+        }
+        // sleep(1);
+        if( writeFile("tests/blah1.txt", "tests/copy") == -1){
+            perror("write file");
+            return -1;
+        }
+        char* str = "HO DETTO BLAH\n";
+        size_t len = strlen(str) + 1;
+        if( appendToFile("tests/blah1.txt", str, len, "tests/append") == -1){
+            perror("append to file");
+            return -1;
+        }
+        char* blah;
+        size_t size;
+        if( readFile("tests/blah1.txt", (void**)&blah, &size) == -1){
+            perror("read file");
+            return -1;
+        }
+        printf("blah file!\n%s", blah);
+        free(blah);
+    }     
+    sleep(1);
+#else
+    if( execute_requests() == -1){
         return -1;
     }
-    sleep(1);
-    if( openFile("fireball", O_CREATE | O_LOCK) == -1){
-        perror("open file");
-        return -1;
-    }
-    sleep(1);
-    if( openFile("in_rock", O_LOCK) == -1){
-        perror("open file");
-        return -1;
-    }
-    sleep(1);
-    if( openFile("made_in_japan", O_NOFLAG ) == -1){
-        perror("open file");
-        return -1;
-    }
-    sleep(1);
-
+#endif
     // ------- CLOSING CONNECTION ------ //
     if( (err = closeConnection(config.socket)) == -1){
         perror("Couldn't close connection");

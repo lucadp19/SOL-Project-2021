@@ -45,14 +45,11 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 }
 
                 str_long_pair_t* arg;
-                if( (arg = malloc(sizeof(str_long_pair_t))) == NULL){
-                    perror("Error in memory allocation");
-                    return -1;
-                }
+                arg = safe_malloc(sizeof(str_long_pair_t));
                 arg->dir = directory;
                 arg->n_files = files;
 
-                if(list_push_back(request_q, "w", (void*)arg) == -1){
+                if(list_push_back(request_list, "w", (void*)arg) == -1){
                     perror("Error in adding element to list");
                     return -1;
                 }
@@ -292,4 +289,36 @@ static int comma_sep(list_t* list, char* arg){
         token = strtok_r(NULL, ",", &save);
     }
     return 0;
+}
+
+void validate_options(){
+    if(request_q == NULL) {
+        fprintf(stderr, "Request queue is NULL, aborting.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if(!f_option){
+        fprintf(stderr, "Option -f must be present once and only once, but it wasn't specified.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    node_t* curr = request_q->head;    
+    while(curr != NULL){
+        switch(curr->key[0]){
+            case 'd': 
+                if(curr->prev == NULL || (curr->prev->key[0] != 'r' && curr->prev->key[0] != 'R')) {
+                    fprintf(stderr, "Option -d must only be used after one of -r or -R. Aborting.\n");
+                    exit(EXIT_FAILURE);
+                }
+
+            case 'D': 
+                if(curr->prev == NULL || (curr->prev->key[0] != 'w' && curr->prev->key[0] != 'W')) {
+                    fprintf(stderr, "Option -d must only be used after one of -r or -R. Aborting.\n");
+                    exit(EXIT_FAILURE);
+                }
+        
+            default: break;
+        }
+        curr = curr->next;
+    }
 }
