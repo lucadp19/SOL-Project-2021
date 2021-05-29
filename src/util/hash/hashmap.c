@@ -85,7 +85,7 @@ int hashmap_insert(hashmap_t** map, const char* key, void* item){
     return 0;
 }
 
-int hashmap_remove(hashmap_t* map, const char* key, char** key_ptr, void** data_ptr){
+int hashmap_remove(hashmap_t* map, const char* key, const char** key_ptr, void** data_ptr){
     if(map == NULL){
         errno = EINVAL;
         return -1;

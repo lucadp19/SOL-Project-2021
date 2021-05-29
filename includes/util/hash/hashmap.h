@@ -36,7 +36,7 @@ int hashmap_insert(hashmap_t** map, const char* key, void* item);
  * and puts the pointer to the removed key and data into key_ptr and data_ptr, unless they are NULL.
  * On error the function returns -1 and sets errno.
  */
-int hashmap_remove(hashmap_t* map, const char* key, char** key_ptr, void** data_ptr);
+int hashmap_remove(hashmap_t* map, const char* key, const char** key_ptr, void** data_ptr);
 
 /**
  * Deletes map, deallocating all memory.

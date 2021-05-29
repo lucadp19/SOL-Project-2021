@@ -91,17 +91,17 @@ int writeFile(const char* pathname, const char* dirname){
     }
 
     // reading and writing expelled files
-    if( write_expelled_files(dirname) == -1)
+    if( write_files_sent_by_server(dirname) == -1)
         return -1;
 
-    // reading final result
-    if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
-        // TODO: EBADF because bad communication ?
-        errno = EBADF;
-        return -1;
-    }
+    // // reading final result
+    // if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
+    //     // TODO: EBADF because bad communication ?
+    //     errno = EBADF;
+    //     return -1;
+    // }
 
-    errno = convert_res_to_errno(res);
-    if(res != 0) return -1;
+    // errno = convert_res_to_errno(res);
+    // if(res != 0) return -1;
     return 0;
 }

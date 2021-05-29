@@ -141,6 +141,14 @@ int write_file(int worker_no, long fd_client);
  *      SA_NO_FILE      if the client is trying to write into a non-existing file
  */
 int read_file(int worker_no, long fd_client);
+/**
+ * Deals with a readFile request from the API.
+ * Can return:
+ *      SA_SUCCESS      in case of success
+ *      SA_ERROR        if there is an unspecified error
+ *      SA_CLOSE        if the client closed its connection
+ */
+int read_n_files(int worker_no, long fd_client);
 
 int send_single_file(int worker_no, long fd_client, file_t* file, bool send_path);
 int send_list_of_files(int worker_no, long fd_client, list_t* files, bool send_path);

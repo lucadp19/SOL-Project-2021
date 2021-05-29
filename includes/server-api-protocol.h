@@ -15,9 +15,9 @@ typedef enum {
 
 // ---------- CONSTANTS ---------- //
 
-#define SA_SUCCESS 0
-#define SA_ERROR  -1
-#define SA_CLOSE  -2
+#define SA_SUCCESS  0
+#define SA_ERROR    -1
+#define SA_CLOSE    -2
 
 // --- Opening/Creation --- //
 #define SA_EXISTS         -10

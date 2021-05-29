@@ -49,7 +49,7 @@ extern op_t last_op;
         }                        \
     } while(0)
 
-int write_expelled_files(const char* dirname);
+int write_files_sent_by_server(const char* dirname);
 int convert_res_to_errno(int res);
 
 #endif

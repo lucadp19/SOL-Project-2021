@@ -66,13 +66,13 @@ static void custom_free_funct(node_t* node){
     free(node);
 }
 
-int write_expelled_files(const char* dirname){
+int write_files_sent_by_server(const char* dirname){
     // ---- READING FILES FROM SERVER ---- //
     list_t* files;
     if( (files = empty_list()) == NULL) return -1;
+    int l;
 
     while(true){
-        int l;
         int path_len;
         char* path;
         size_and_buf_t* file;
@@ -122,6 +122,16 @@ int write_expelled_files(const char* dirname){
             free(file);
             return -1;
         }
+    }
+
+    // ----- READING FINAL ANSWER FROM SERVER ----- //
+    int res;
+    if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
+        errno = EBADF;
+        return -1;
+    } if (res != SA_SUCCESS){
+        errno = convert_res_to_errno(res);
+        return -1;
     }
 
     // ----- CREATING DIRECTORY ----- //

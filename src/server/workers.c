@@ -193,7 +193,34 @@ void* worker_thread(void* arg){
                 }
 
                 break;
+            } 
+            case READ_N_FILES: {
+                logger("[THREAD %d] [READ_N_FILES] Request from client %ld is READ_N_FILES.\n", worker_no, fd_client);
+                int res = read_n_files(worker_no, fd_client);
+
+                if( writen(fd_client, &res, sizeof(int)) == -1){
+                    perror("Error in writing to client");
+                    result.code = MW_FATAL_ERROR;
+                    break;
+                }
+
+                // setting result code for main thread
+                if(res == SA_SUCCESS)
+                    result.code = MW_SUCCESS;
+                else if(res == SA_CLOSE || res == SA_ERROR){
+                    logger("[THREAD %d] [READ_N_FILE_FAIL] Fatal error in READ_N_FILE request from client %ld.\n", worker_no, fd_client);
+                    result.code = MW_FATAL_ERROR;
+                } else {
+                    logger(
+                        "[THREAD %d] [READ_N_FILE_FAIL] Non-fatal error in READ_N_FILE request from client %ld: %s.\n", 
+                        worker_no, fd_client, thread_res_to_msg(res)
+                    );
+                    result.code = MW_NON_FATAL_ERROR;
+                }
+
+                break;
             }
+
             default:
                 result.code = MW_FATAL_ERROR;
                 break;
