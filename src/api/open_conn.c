@@ -1,11 +1,6 @@
 #include "api.h"
 #include "api/globals.h"
 
-/**
- * Given a non-negative integer representing a time in milliseconds,
- * initializes a struct timespec with the given time.
- */
-static int set_timespec_from_msec(int msec, struct timespec* req);
 
 int openConnection(const char* sockname, int msec, const struct timespec abstime){
     // already connected
@@ -67,18 +62,5 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
     debug("Connected! :D\n");
 
     socket_path = sockname;
-    return 0;
-}
-
-static int set_timespec_from_msec(int msec, struct timespec* req){
-    if(msec < 0 || req == NULL){
-        errno = EINVAL;
-        return -1;
-    }
-
-    req->tv_sec = msec / 1000;
-    msec = msec % 1000;
-    req->tv_nsec = msec * 1000;
-
     return 0;
 }

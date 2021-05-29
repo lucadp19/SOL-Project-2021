@@ -151,3 +151,16 @@ void pipe_init(int pipe[]){
     pipe[0] = -1;
     pipe[1] = -1;
 }
+
+int set_timespec_from_msec(long msec, struct timespec* req){
+    if(msec < 0 || req == NULL){
+        errno = EINVAL;
+        return -1;
+    }
+
+    req->tv_sec = msec / 1000;
+    msec = msec % 1000;
+    req->tv_nsec = msec * 1000;
+
+    return 0;
+}

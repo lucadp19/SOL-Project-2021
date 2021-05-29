@@ -2,69 +2,10 @@
 #include "api/globals.h"
 
 #include "util/list.h"
+#include "util/files.h"
 
 #include "server-api-protocol.h"
 
-static const char* remove_path_from_name(const char* path){
-    if(path == NULL) {
-        return NULL;
-    }
-
-    // if there are no / in path, the whole path is the name
-    const char* name;
-    if( (name = strrchr(path, '/')) == NULL )
-        name = path;
-    return name;
-}
-
-// Taken from https://gist.github.com/JonathonReinhart/8c0d90191c38af2dcadb102c4e202950
-static int mkdir_p(const char *path) {
-    /* Adapted from http://stackoverflow.com/a/2336245/119527 */
-    const size_t len = strlen(path);
-    char _path[PATH_MAX];
-    char *p; 
-
-    errno = 0;
-
-    /* Copy string so its mutable */
-    if (len > sizeof(_path)-1) {
-        errno = ENAMETOOLONG;
-        return -1; 
-    }   
-    strcpy(_path, path);
-
-    /* Iterate the string */
-    for (p = _path + 1; *p; p++) {
-        if (*p == '/') {
-            /* Temporarily truncate */
-            *p = '\0';
-
-            if (mkdir(_path, S_IRWXU) != 0) {
-                if (errno != EEXIST)
-                    return -1; 
-            }
-
-            *p = '/';
-        }
-    }   
-
-    if (mkdir(_path, S_IRWXU) != 0) {
-        if (errno != EEXIST)
-            return -1; 
-    }   
-
-    return 0;
-}
-
-static void custom_free_funct(node_t* node){
-    if(node == NULL) return;
-
-    size_and_buf_t* data = node->data;
-    free(data->buf);
-    free(data);
-    free((void*)node->key);
-    free(node);
-}
 
 int write_files_sent_by_server(const char* dirname){
     // ---- READING FILES FROM SERVER ---- //
@@ -75,10 +16,10 @@ int write_files_sent_by_server(const char* dirname){
     while(true){
         int path_len;
         char* path;
-        size_and_buf_t* file;
+        size_n_buf_t* file;
 
         if( (l = readn(fd_sock, &path_len, sizeof(int))) == -1 || l == 0){
-            list_delete(&files, custom_free_funct);
+            list_delete(&files, free_node_size_n_buf);
             return -1;
         }
 
@@ -86,18 +27,18 @@ int write_files_sent_by_server(const char* dirname){
         if( path_len == 0 ) break;
 
         // must read another file
-        file = safe_calloc(1, sizeof(size_and_buf_t));
+        file = safe_calloc(1, sizeof(size_n_buf_t));
         path = safe_calloc(path_len + 1, sizeof(char));
 
         if( (l = readn(fd_sock, path, path_len + 1)) == -1 || l == 0) {
-            list_delete(&files, custom_free_funct);
+            list_delete(&files, free_node_size_n_buf);
             free((void*)path);
             free(file);
             return -1;
         }
 
         if( (l = readn(fd_sock, &(file->size), sizeof(long))) == -1 || l == 0) {
-            list_delete(&files, custom_free_funct);
+            list_delete(&files, free_node_size_n_buf);
             free((void*)path);
             free(file);
             return -1;
@@ -108,7 +49,7 @@ int write_files_sent_by_server(const char* dirname){
             file->buf = safe_malloc(file->size);
 
             if( (l = readn(fd_sock, file->buf, file->size)) == -1 || l == 0) {
-                list_delete(&files, custom_free_funct);
+                list_delete(&files, free_node_size_n_buf);
                 free((void*)path);
                 free(file->buf);
                 free(file);
@@ -117,7 +58,7 @@ int write_files_sent_by_server(const char* dirname){
         }
 
         if( list_push_back(files, path, (void*)file) == -1) {
-            list_delete(&files, custom_free_funct);
+            list_delete(&files, free_node_size_n_buf);
             free((void*)path);
             free(file);
             return -1;
@@ -134,49 +75,12 @@ int write_files_sent_by_server(const char* dirname){
         return -1;
     }
 
-    // ----- CREATING DIRECTORY ----- //
-    if( mkdir_p(dirname) == -1){
-        list_delete(&files, custom_free_funct);
+    
+    if( write_list_of_files_into_dir(files, dirname) == -1 ) {
+        list_delete(&files, free_node_size_n_buf);
         return -1;
     }
-
-    // ----- WRITING FILE IN DIRECTORY ----- //
-    node_t* curr = files->head;
-    int path_to_write_len = -1;
-    char* path_to_write = NULL;
-
-    while(curr != NULL){
-        const char* base_name = remove_path_from_name(curr->key);
-
-        // creating new path name
-        int old_len = path_to_write_len;
-        path_to_write_len = strlen(base_name) + strlen(dirname) + 2;
-        if(old_len < path_to_write_len) // reallocate memory
-            path_to_write = safe_realloc(path_to_write, path_to_write_len * sizeof(char));
-        snprintf(path_to_write, path_to_write_len, "%s/%s", dirname, base_name);
-
-        FILE* to_write;
-        if( (to_write = fopen(path_to_write, "wb")) == NULL){
-            list_delete(&files, custom_free_funct);
-            free(path_to_write);
-            return -1;
-        }
-
-        size_and_buf_t* file = curr->data;
-        int l;
-        if( file->size > 0 && (l = fwrite(file->buf, 1, file->size, to_write)) < file->size){
-            fclose(to_write);
-            list_delete(&files, custom_free_funct);
-            free(path_to_write);
-            return -1;
-        }
-
-        fclose(to_write);
-        curr = curr->next;
-    }
     
-    if(path_to_write != NULL) free(path_to_write);
-    list_delete(&files, custom_free_funct);
-    
+    list_delete(&files, free_node_size_n_buf);
     return 0;
 }

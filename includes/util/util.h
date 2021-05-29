@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <time.h>
 
 #include <errno.h>
 #include <ctype.h>
@@ -26,6 +27,7 @@
 // --------------- GENERAL --------------- //
 
 #define PATH_MAX 128
+
 
 /**
  * Takes a string and converts it into a long.
@@ -145,6 +147,10 @@ int readn(long fd, void *buf, size_t size);
  */
 int writen(long fd, void *buf, size_t size);
 
-
+/**
+ * Given a non-negative integer representing a time in milliseconds,
+ * initializes a struct timespec with the given time.
+ */
+int set_timespec_from_msec(long msec, struct timespec *req);
 
 #endif

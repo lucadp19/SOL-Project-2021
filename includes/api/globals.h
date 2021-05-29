@@ -7,12 +7,7 @@ typedef struct {
     bool lock;
     bool success;
     char* path;
-} op_t;
-
-typedef struct {
-    long size;
-    void* buf;
-} size_and_buf_t;
+} last_op_t;
 
 /**
  * File descriptor for the currently connected socket.
@@ -25,7 +20,7 @@ extern const char* socket_path;
 /**
  * Last operation - was it an openFile(pathname, O_CREATE | O_LOCK)?
  */
-extern op_t last_op;
+extern last_op_t last_op;
 
 /**
  * Simple macro to reset connected socket.
