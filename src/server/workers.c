@@ -167,6 +167,33 @@ void* worker_thread(void* arg){
 
                 break;
             }
+            
+            case APPEND_TO_FILE: {
+                logger("[THREAD %d] [APPEND_TO_FILE] Request from client %ld is APPEND_TO_FILE.\n", worker_no, fd_client);
+                int res = append_to_file(worker_no, fd_client);
+
+                if( writen(fd_client, &res, sizeof(int)) == -1){
+                    perror("Error in writing to client");
+                    result.code = MW_FATAL_ERROR;
+                    break;
+                }
+
+                // setting result code for main thread
+                if(res == SA_SUCCESS)
+                    result.code = MW_SUCCESS;
+                else if(res == SA_CLOSE || res == SA_ERROR){
+                    logger("[THREAD %d] [APPEND_TO_FILE_FAIL] Fatal error in APPEND_TO_FILE request from client %ld.\n", worker_no, fd_client);
+                    result.code = MW_FATAL_ERROR;
+                } else {
+                    logger(
+                        "[THREAD %d] [APPEND_TO_FILE_FAIL] Non-fatal error in APPEND_TO_FILE request from client %ld: %s.\n", 
+                        worker_no, fd_client, thread_res_to_msg(res)
+                    );
+                    result.code = MW_NON_FATAL_ERROR;
+                }
+
+                break;
+            }
 
             case READ_FILE: {
                 logger("[THREAD %d] [READ_FILE] Request from client %ld is READ_FILE.\n", worker_no, fd_client);

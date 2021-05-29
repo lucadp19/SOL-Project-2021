@@ -160,6 +160,7 @@ int read_n_files(int worker_no, long fd_client);
  *      SA_NOT_LOCKED   if the file isn't locked by the client
  */
 int remove_file(int worker_no, long fd_client);
+int append_to_file(int worker_no, long fd_client);
 
 int send_single_file(int worker_no, long fd_client, file_t* file, bool send_path);
 int send_list_of_files(int worker_no, long fd_client, list_t* files, bool send_path);
