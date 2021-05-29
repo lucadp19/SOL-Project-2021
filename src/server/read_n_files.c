@@ -65,7 +65,7 @@ int read_n_files(int worker_no, long fd_client){
     list_delete(&file_list, free_only_node);
 
     if(all_files)
-        logger("[THREAD %d] [READ_N_FILES_SUCCESS] Successfully sent every file to client.\n");
+        logger("[THREAD %d] [READ_N_FILES_SUCCESS] Successfully sent every file to client.\n", worker_no);
     else 
         logger("[THREAD %d] [READ_N_FILES_SUCCESS] Successfully sent %d files to client.\n", worker_no, original_N);
 
