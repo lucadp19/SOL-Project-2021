@@ -79,13 +79,9 @@ int writeFile(const char* pathname, const char* dirname){
     // ---- READING RESULT FROM SERVER ---- //
 
     // reading and writing expelled files
-    if( write_expelled_files(dirname) == -1){
-        debug("I'm standing no more");
+    if( write_expelled_files(dirname) == -1)
         return -1;
-    }
     int l;
-
-    debug("I'm still standing\n");
 
     // reading answer
     int res;
@@ -94,7 +90,7 @@ int writeFile(const char* pathname, const char* dirname){
         errno = EBADF;
         return -1;
     }
-    debug("Result is %d\n", res);
+
     errno = convert_res_to_errno(res);
     if(res != 0) return -1;
     return 0;

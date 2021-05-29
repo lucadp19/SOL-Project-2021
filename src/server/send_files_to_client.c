@@ -14,6 +14,9 @@ int send_single_file(int worker_no, long fd_client, file_t* file){
     if( file->size != 0 && writen(fd_client, file->contents, file->size) == -1)
         return -1;
     
+    logger("[WRITE_TO_CLIENT] Written file \"s\" to client with fd %ld.\n", file->path_name, fd_client);
+    logger("[WRITE_TO_CLIENT][WB] %lu\n", file->size);
+
     return 0;
 }
 
@@ -34,5 +37,6 @@ int send_list_of_files(int worker_no, long fd_client, list_t* files){
     int terminating_zero = 0;
     if( writen(fd_client, &terminating_zero, sizeof(int)) == -1)
         return -1;
+
     return 0;
 }

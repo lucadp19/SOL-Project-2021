@@ -130,12 +130,14 @@ int close_file(int worker_no, long fd_client);
  */
 int write_file(int worker_no, long fd_client);
 
+int send_single_file(int worker_no, long fd_client, file_t* file);
+int send_list_of_files(int worker_no, long fd_client, list_t* files);
+
 int add_file_to_fs(file_t* file);
 void files_node_cleaner(node_t* node);
 void file_delete(file_t* file);
 
 int expell_LRU(file_t** file_ptr);
 int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list);
-int send_expelled_files(int worker_no, long fd_client, list_t* to_expell);
 
 #endif

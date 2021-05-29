@@ -88,7 +88,6 @@ int write_file(int worker_no, long fd_client){
     safe_pthread_mutex_lock(&curr_state_mtx);
     curr_state.space += file->size;
     long size_to_remove = curr_state.space - server_config.max_space;
-    debug("curr_state.space = %lu, max_space = %lu, size_to_remove = %ld\n", curr_state.space, server_config.max_space, size_to_remove);
     if(size_to_remove > 0){
         // maybe I should check the error
         expell_multiple_LRU(size_to_remove, to_expell);
@@ -102,6 +101,8 @@ int write_file(int worker_no, long fd_client){
         return SA_ERROR;
     }
 
+    logger("[THREAD %d] [WRITE_FILE_SUCCESS] Successfully written file \"%s\" into server.\n", worker_no, file->path_name);
+    logger("[THREAD %d] [WRITE_FILE_SUCCESS][WB] %lu\n", worker_no, file->size);
     
     list_delete(&to_expell, files_node_cleaner);
     return SA_SUCCESS;

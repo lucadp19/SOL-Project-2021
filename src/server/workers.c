@@ -91,6 +91,12 @@ void* worker_thread(void* arg){
             case OPEN_FILE: {
                 logger("[THREAD %d] [OPEN_FILE] Request from client %ld is OPEN_FILE.\n", worker_no, fd_client);
                 int res = open_file(worker_no, fd_client);
+                
+                if( writen(fd_client, &res, sizeof(int)) == -1){
+                    perror("Error in writing to client");
+                    result.code = MW_FATAL_ERROR;
+                    break;
+                }
 
                 // setting result code for main thread
                 if(res == SA_SUCCESS)
@@ -105,18 +111,18 @@ void* worker_thread(void* arg){
                     );
                     result.code = MW_NON_FATAL_ERROR;
                 }
-                
-                if( writen(fd_client, &res, sizeof(int)) == -1){
-                    perror("Error in writing to client");
-                    result.code = MW_FATAL_ERROR;
-                    break;
-                }
 
                 break;
             }
             case CLOSE_FILE: {
                 logger("[THREAD %d] [CLOSE_FILE] Request from client %ld is CLOSE_FILE.\n", worker_no, fd_client);
                 int res = close_file(worker_no, fd_client);
+
+                if( writen(fd_client, &res, sizeof(int)) == -1){
+                    perror("Error in writing to client");
+                    result.code = MW_FATAL_ERROR;
+                    break;
+                }
 
                 // setting result code for main thread
                 if(res == SA_SUCCESS)
@@ -132,20 +138,19 @@ void* worker_thread(void* arg){
                     result.code = MW_NON_FATAL_ERROR;
                 }
 
+                break;
+            }
+            
+            case WRITE_FILE: {
+                logger("[THREAD %d] [WRITE_FILE] Request from client %ld is WRITE_FILE.\n", worker_no, fd_client);
+                int res = write_file(worker_no, fd_client);
+
                 if( writen(fd_client, &res, sizeof(int)) == -1){
                     perror("Error in writing to client");
                     result.code = MW_FATAL_ERROR;
                     break;
                 }
 
-                break;
-            }
-            case WRITE_FILE: {
-                logger("[THREAD %d] [WRITE_FILE] Request from client %ld is WRITE_FILE.\n", worker_no, fd_client);
-                int res = write_file(worker_no, fd_client);
-
-                debug("hey ya, res is %d\n", res);
-                
                 // setting result code for main thread
                 if(res == SA_SUCCESS)
                     result.code = MW_SUCCESS;
@@ -158,14 +163,6 @@ void* worker_thread(void* arg){
                         worker_no, fd_client, thread_res_to_msg(res)
                     );
                     result.code = MW_NON_FATAL_ERROR;
-                }
-
-                debug("stll no error\n");
-
-                if( writen(fd_client, &res, sizeof(int)) == -1){
-                    perror("Error in writing to client");
-                    result.code = MW_FATAL_ERROR;
-                    break;
                 }
 
                 break;

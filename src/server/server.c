@@ -215,10 +215,13 @@ int main(int argc, char* argv[]){
             }
 
             // termination signal from sig_handler thread
-            if(i == sig_handler_pipe[R_ENDP] && mode == CLOSE_SERVER){
-                // waking up sleeping threads
-                safe_pthread_cond_broadcast(&request_queue_nonempty);
-                break;
+            if(i == sig_handler_pipe[R_ENDP]){
+                if(mode == CLOSE_SERVER) {
+                    // waking up sleeping threads
+                    safe_pthread_cond_broadcast(&request_queue_nonempty);
+                    break;
+                } else // mode == REFUSE_CONN
+                    continue;
             }
 
             // worker or client?

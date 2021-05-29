@@ -77,21 +77,16 @@ int write_expelled_files(const char* dirname){
         char* path;
         size_and_buf_t* file;
 
-        debug("reading pathlen\n");
         if( (l = readn(fd_sock, &path_len, sizeof(int))) == -1 || l == 0){
-            debug("l = %d\n", l);
             list_delete(&files, custom_free_funct);
             return -1;
         }
 
         // ended list
-        debug("pathlen = %d\n", path_len);
         if( path_len == 0 ) break;
-        debug("pathlen is not zero!\n");
-
-        file = safe_calloc(1, sizeof(size_and_buf_t));
 
         // must read another file
+        file = safe_calloc(1, sizeof(size_and_buf_t));
         path = safe_calloc(path_len + 1, sizeof(char));
 
         if( (l = readn(fd_sock, path, path_len + 1)) == -1 || l == 0) {
@@ -109,7 +104,6 @@ int write_expelled_files(const char* dirname){
         }
 
         // empty file => no content
-        debug("filesize = %d\n", file->size);
         if(file->size != 0) {
             file->buf = safe_malloc(file->size);
 
@@ -130,15 +124,11 @@ int write_expelled_files(const char* dirname){
         }
     }
 
-    debug("out of the loop\n");
-
     // ----- CREATING DIRECTORY ----- //
     if( mkdir_p(dirname) == -1){
         list_delete(&files, custom_free_funct);
         return -1;
     }
-
-    debug("directory created\n");
 
     // ----- WRITING FILE IN DIRECTORY ----- //
     node_t* curr = files->head;
@@ -151,11 +141,9 @@ int write_expelled_files(const char* dirname){
         // creating new path name
         int old_len = path_to_write_len;
         path_to_write_len = strlen(base_name) + strlen(dirname) + 2;
-        if(old_len < path_to_write_len)
+        if(old_len < path_to_write_len) // reallocate memory
             path_to_write = safe_realloc(path_to_write, path_to_write_len * sizeof(char));
         snprintf(path_to_write, path_to_write_len, "%s/%s", dirname, base_name);
-
-        debug("path to write: %s\n", path_to_write);
 
         FILE* to_write;
         if( (to_write = fopen(path_to_write, "wb")) == NULL){
@@ -165,17 +153,13 @@ int write_expelled_files(const char* dirname){
         }
 
         size_and_buf_t* file = curr->data;
-        debug("file->size = %d\n");
         int l;
         if( file->size > 0 && (l = fwrite(file->buf, 1, file->size, to_write)) < file->size){
-            debug("l = %d\n");
             fclose(to_write);
             list_delete(&files, custom_free_funct);
             free(path_to_write);
             return -1;
         }
-
-        debug("hello8");
 
         fclose(to_write);
         curr = curr->next;
@@ -183,7 +167,6 @@ int write_expelled_files(const char* dirname){
     
     if(path_to_write != NULL) free(path_to_write);
     list_delete(&files, custom_free_funct);
-    debug("still no error\n");
     
     return 0;
 }

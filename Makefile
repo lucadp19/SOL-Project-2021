@@ -9,6 +9,7 @@ LIB_DIR		= ./libs
 INC_DIR		= ./includes
 BIN_DIR		= ./bin
 TEST_DIR	= ./tests
+LOG_DIR 	= ./logs
 
 # Dynamic linking
 DYN_LINK = -L$(LIB_DIR) -Wl,-rpath,$(LIB_DIR)
@@ -98,6 +99,7 @@ clean:
 	@rm -f vgcore.*
 	@rm -rf $(OBJ_DIR)/*
 	@rm -rf $(BIN_DIR)/*
+	@rm -rf $(LOG_DIR)/*
 	@echo "Cleaning complete!"
 
 # ---------------- Personal Tests ---------------- 	#

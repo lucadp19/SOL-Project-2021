@@ -13,7 +13,6 @@ int expell_LRU(file_t** expelled_ptr){
     int err;
 
     while( (err = hashmap_iter_get_next(iter, files)) == 0){
-        debug("I'm inside\n");
         file_t* curr_file = (file_t*)iter->current_pos->data;
         if(least_time == -1 || curr_file->last_use < least_time){
             least_time = curr_file->last_use;
@@ -23,8 +22,6 @@ int expell_LRU(file_t** expelled_ptr){
         return -1;
 
     // least_file is != NULL
-    if(least_file == NULL)
-        debug("least_file is null\n");
     char* path = least_file->path_name;
     hashmap_remove(files, path, NULL, (void**)expelled_ptr);
 
@@ -33,6 +30,7 @@ int expell_LRU(file_t** expelled_ptr){
     curr_state.space -= (*expelled_ptr)->size;
     free(iter);
 
+    logger("[REPLACEMENT] File \"%s\" was removed from the server by the replacement algorithm.\n", (*expelled_ptr)->path_name);
     return 0;
 }
 
@@ -40,7 +38,7 @@ int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list){
     size_t freed = 0;
 
     // no need for mutex, it has already been locked
-    if(size_to_free > curr_state.space)
+    if(size_to_free > curr_state.space) // can't free more space than I currently have
         return -1;
 
     while(freed < size_to_free){
