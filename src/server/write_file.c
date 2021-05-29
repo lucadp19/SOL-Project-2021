@@ -97,7 +97,7 @@ int write_file(int worker_no, long fd_client){
     safe_pthread_mutex_unlock(&files_mtx);   
 
     // sending files to client
-    if( send_expelled_files(worker_no, fd_client, to_expell) == -1){
+    if( send_list_of_files(worker_no, fd_client, to_expell) == -1){
         list_delete(&to_expell, files_node_cleaner);
         return SA_ERROR;
     }
