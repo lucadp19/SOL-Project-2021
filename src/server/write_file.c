@@ -95,8 +95,15 @@ int write_file(int worker_no, long fd_client){
     safe_pthread_mutex_unlock(&curr_state_mtx);
     safe_pthread_mutex_unlock(&files_mtx);   
 
+    // notify client of success up until now
+    int current_res = SA_SUCCESS;
+    if( writen(fd_client, &current_res, sizeof(int)) == -1 ){
+        list_delete(&to_expell, files_node_cleaner);
+        return SA_ERROR;
+    }
+
     // sending files to client
-    if( send_list_of_files(worker_no, fd_client, to_expell) == -1){
+    if( send_list_of_files(worker_no, fd_client, to_expell, true) == -1){
         list_delete(&to_expell, files_node_cleaner);
         return SA_ERROR;
     }

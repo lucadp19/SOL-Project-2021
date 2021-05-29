@@ -123,15 +123,27 @@ int close_file(int worker_no, long fd_client);
 /**
  * Deals with a writeFile request from the API.
  * Can return:
- *      SA_SUCCESS  in case of success
- *      SA_ERROR    if there is an unspecified error
- *      SA_CLOSE    if the client closed its connection
- *      SA_NO_FILE  if the client is trying to write into a non-existing file
+ *      SA_SUCCESS      in case of success
+ *      SA_ERROR        if there is an unspecified error
+ *      SA_CLOSE        if the client closed its connection
+ *      SA_NO_FILE      if the client is trying to write into a non-existing file
+ *      SA_NOT_LOCKED   if the file isn't locked by the client
+ *      SA_TOO_BIG      if the file is larger than the server capacity
+ *      SA_NOT_EMPTY    if the file has already been written
  */
 int write_file(int worker_no, long fd_client);
+/**
+ * Deals with a readFile request from the API.
+ * Can return:
+ *      SA_SUCCESS      in case of success
+ *      SA_ERROR        if there is an unspecified error
+ *      SA_CLOSE        if the client closed its connection
+ *      SA_NO_FILE      if the client is trying to write into a non-existing file
+ */
+int read_file(int worker_no, long fd_client);
 
-int send_single_file(int worker_no, long fd_client, file_t* file);
-int send_list_of_files(int worker_no, long fd_client, list_t* files);
+int send_single_file(int worker_no, long fd_client, file_t* file, bool send_path);
+int send_list_of_files(int worker_no, long fd_client, list_t* files, bool send_path);
 
 int add_file_to_fs(file_t* file);
 void files_node_cleaner(node_t* node);

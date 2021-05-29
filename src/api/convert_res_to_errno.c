@@ -12,6 +12,12 @@ int convert_res_to_errno(int res){
             return ENOENT;
         case SA_ALREADY_LOCKED:
             return EBUSY;
+        case SA_NOT_LOCKED:
+            return EPERM;
+        case SA_TOO_BIG:
+            return EFBIG;
+        case SA_NOT_EMPTY:
+            return EACCES;
         case SA_CLOSE:
         case SA_ERROR:
         default:

@@ -78,13 +78,23 @@ int writeFile(const char* pathname, const char* dirname){
     debug("File sent! Reading result from server...\n");
     // ---- READING RESULT FROM SERVER ---- //
 
+    // reading result before possible file expulsion
+    int res, l;
+    if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
+        // TODO: EBADF because bad communication ?
+        errno = EBADF;
+        return -1;
+    }
+    if(res != SA_SUCCESS){
+        errno = convert_res_to_errno(res);
+        return -1;
+    }
+
     // reading and writing expelled files
     if( write_expelled_files(dirname) == -1)
         return -1;
-    int l;
 
-    // reading answer
-    int res;
+    // reading final result
     if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
         // TODO: EBADF because bad communication ?
         errno = EBADF;
