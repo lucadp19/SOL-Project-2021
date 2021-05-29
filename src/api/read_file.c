@@ -33,7 +33,7 @@ int readFile(const char* pathname, void** buf, size_t* size){
     }
 
     // can read file
-    if( (l = readn(fd_sock, size, sizeof(size_t))) == -1 || l == 0){
+    if( (l = readn(fd_sock, &(*size), sizeof(size_t))) == -1 || l == 0){
         return -1;
     }
     debug("*size = %lu\n", *size);
