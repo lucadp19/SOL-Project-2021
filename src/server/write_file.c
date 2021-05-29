@@ -94,16 +94,14 @@ int write_file(int worker_no, long fd_client){
         expell_multiple_LRU(size_to_remove, to_expell);
     }
     safe_pthread_mutex_unlock(&curr_state_mtx);
-
-    // sending files to client
-    // if( send_expelled_files(worker_no, fd_client, to_expell) == -1){
-    //     list_delete(&to_expell, files_node_cleaner);
-    //     return SA_ERROR;
-    // }
     safe_pthread_mutex_unlock(&files_mtx);   
 
-    int zero = 0;
-    writen(fd_client, &zero, sizeof(int)); 
+    // sending files to client
+    if( send_expelled_files(worker_no, fd_client, to_expell) == -1){
+        list_delete(&to_expell, files_node_cleaner);
+        return SA_ERROR;
+    }
+
     
     list_delete(&to_expell, files_node_cleaner);
     return SA_SUCCESS;

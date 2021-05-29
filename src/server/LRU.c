@@ -13,8 +13,9 @@ int expell_LRU(file_t** expelled_ptr){
     int err;
 
     while( (err = hashmap_iter_get_next(iter, files)) == 0){
+        debug("I'm inside\n");
         file_t* curr_file = (file_t*)iter->current_pos->data;
-        if(curr_file->last_use < least_time){
+        if(least_time == -1 || curr_file->last_use < least_time){
             least_time = curr_file->last_use;
             least_file = curr_file;
         }
@@ -22,12 +23,15 @@ int expell_LRU(file_t** expelled_ptr){
         return -1;
 
     // least_file is != NULL
+    if(least_file == NULL)
+        debug("least_file is null\n");
     char* path = least_file->path_name;
     hashmap_remove(files, path, NULL, (void**)expelled_ptr);
 
     // no need for mutex, it has already been locked
     curr_state.files--;
     curr_state.space -= (*expelled_ptr)->size;
+    free(iter);
 
     return 0;
 }
@@ -61,15 +65,15 @@ int send_expelled_files(int worker_no, long fd_client, list_t* expelled){
     if(curr == NULL)
         debug("curr is null\n");
     while(curr != NULL){
-        int pathname_len = strlen(curr->key);
         file_t* curr_file = (file_t*)curr->data;
+        int pathname_len = strlen(curr_file->path_name);
 
         debug("hello from inside the while loop\n");
         debug("filename = %s\n", curr->key);
 
         if( writen(fd_client, &pathname_len, sizeof(int)) == -1)
             return -1;
-        if( writen(fd_client, (void*)curr->key, (pathname_len+1) * sizeof(char)) == -1)
+        if( writen(fd_client, (void*)curr_file->path_name, (pathname_len+1) * sizeof(char)) == -1)
             return -1;
         
         if( writen(fd_client, &curr_file->size, sizeof(size_t)) == -1)
