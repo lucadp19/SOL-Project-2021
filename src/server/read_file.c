@@ -27,7 +27,8 @@ int read_file(int worker_no, long fd_client){
         return SA_NO_FILE;
     }
 
-    free(pathname);
+    // updating time of last use
+    to_send->last_use = time(NULL);
 
     // notify client of success (until now)
     int current_res = SA_SUCCESS;
@@ -43,6 +44,9 @@ int read_file(int worker_no, long fd_client){
     }
 
     safe_pthread_mutex_unlock(&files_mtx);
-    
+
+    logger("[THREAD %d] [READ_FILE_SUCCESS] Successfully sent file \"%s\" to client.\n", worker_no, pathname);    
+    free(pathname);
+
     return SA_SUCCESS; 
 }

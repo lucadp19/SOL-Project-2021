@@ -1,13 +1,16 @@
 #include "server.h"
 
 int read_n_files(int worker_no, long fd_client){
-    int N;
+    int N, original_N;
+    bool all_files = false;
 
     // ------ READING N ------ //
     int l;
     if( (l = readn(fd_client, &N, sizeof(int))) == -1 ){
         return SA_ERROR;
     } if( l == 0 ) return SA_CLOSE;
+
+    original_N = N;
 
     list_t* file_list;
     if( (file_list = empty_list()) == NULL){
@@ -20,7 +23,10 @@ int read_n_files(int worker_no, long fd_client){
     safe_pthread_mutex_lock(&files_mtx);
 
     safe_pthread_mutex_lock(&curr_state_mtx);
-    if(N <= 0) N = curr_state.files;
+    if(N <= 0) {
+        all_files = true;
+        N = curr_state.files;
+    }
     safe_pthread_mutex_unlock(&curr_state_mtx);
 
     int err;
@@ -57,6 +63,12 @@ int read_n_files(int worker_no, long fd_client){
 
     safe_pthread_mutex_unlock(&files_mtx);
     list_delete(&file_list, free_only_node);
+
+    if(all_files)
+        logger("[THREAD %d] [READ_N_FILES_SUCCESS] Successfully sent every file to client.\n");
+    else 
+        logger("[THREAD %d] [READ_N_FILES_SUCCESS] Successfully sent %d files to client.\n", worker_no, original_N);
+
 
     return SA_SUCCESS;
 }

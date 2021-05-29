@@ -89,8 +89,10 @@ int write_file(int worker_no, long fd_client){
     curr_state.space += file->size;
     long size_to_remove = curr_state.space - server_config.max_space;
     if(size_to_remove > 0){
+        file->can_be_expelled = false;
         // maybe I should check the error
         expell_multiple_LRU(size_to_remove, to_expell);
+        file->can_be_expelled = true;
     }
     safe_pthread_mutex_unlock(&curr_state_mtx);
     safe_pthread_mutex_unlock(&files_mtx);   

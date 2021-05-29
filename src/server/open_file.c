@@ -56,6 +56,7 @@ int open_file(int worker_no, long fd_client){
             expell_LRU(&expelled);
         }
         safe_pthread_mutex_unlock(&curr_state_mtx);
+        file->can_be_expelled = true;
         // TODO: what should I do with this file?! => delete it probably
         file_delete(expelled);
 
@@ -146,6 +147,7 @@ static int create_file(file_t** file, char* pathname, long flags, long fd_client
     (*file)->contents = NULL;
     (*file)->path_name = pathname;
     (*file)->size = 0;
+    (*file)->can_be_expelled = false;
 
     if(IS_FLAG_SET(flags, O_LOCK))
         (*file)->fd_lock = fd_client;

@@ -96,7 +96,7 @@ int hashmap_remove(hashmap_t* map, const char* key, const char** key_ptr, void**
     node_t* curr = map->list[hash]->head;
 
     while(curr != NULL){
-        if(curr->key == key){
+        if(strcmp(curr->key, key) == 0){
 
             // is head?
             if(curr->prev != NULL)

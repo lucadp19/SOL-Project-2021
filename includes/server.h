@@ -54,8 +54,6 @@ typedef struct {
     void* contents;
     /** Size of the contents of the file. */
     size_t size;
-    /** The file descriptor of the client who currently has this file open. */
-    long open;
     /** File descriptor of the client who has locked this file.
      * -1 if no client is currently locking this file.
      */
@@ -68,6 +66,10 @@ typedef struct {
     pthread_mutex_t file_mtx;
     /** Time of last use to implement LRU. */
     time_t last_use;
+    /** Bool to decide if file currently can or cannot be expelled
+     * by the LRU algorithm.
+     */ 
+    bool can_be_expelled;
 } file_t;
 
 // ------ GLOBAL VARIABLES ------ //
@@ -149,6 +151,15 @@ int read_file(int worker_no, long fd_client);
  *      SA_CLOSE        if the client closed its connection
  */
 int read_n_files(int worker_no, long fd_client);
+/**
+ * Deals with a removeFile request from the API.
+ * Can return:
+ *      SA_SUCCESS      in case of success
+ *      SA_ERROR        if there is an unspecified error
+ *      SA_CLOSE        if the client closed its connection
+ *      SA_NOT_LOCKED   if the file isn't locked by the client
+ */
+int remove_file(int worker_no, long fd_client);
 
 int send_single_file(int worker_no, long fd_client, file_t* file, bool send_path);
 int send_list_of_files(int worker_no, long fd_client, list_t* files, bool send_path);

@@ -14,15 +14,23 @@ int expell_LRU(file_t** expelled_ptr){
 
     while( (err = hashmap_iter_get_next(iter, files)) == 0){
         file_t* curr_file = (file_t*)iter->current_pos->data;
+
+        // if current file is the file that called LRU continue
+        if(!curr_file->can_be_expelled) continue;
+
         if(least_time == -1 || curr_file->last_use < least_time){
             least_time = curr_file->last_use;
             least_file = curr_file;
         }
+        debug("\t[LRU] least: %lu, current: %lu, curr-name: %s\n",
+            least_time, curr_file->last_use, curr_file->path_name);
+
     } if( err == -1 )
         return -1;
 
     // least_file is != NULL
     char* path = least_file->path_name;
+    debug("\t[LRU] File to be removed is: %s\n", path);
     hashmap_remove(files, path, NULL, (void**)expelled_ptr);
 
     // no need for mutex, it has already been locked

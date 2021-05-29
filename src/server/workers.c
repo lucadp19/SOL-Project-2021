@@ -208,11 +208,11 @@ void* worker_thread(void* arg){
                 if(res == SA_SUCCESS)
                     result.code = MW_SUCCESS;
                 else if(res == SA_CLOSE || res == SA_ERROR){
-                    logger("[THREAD %d] [READ_N_FILE_FAIL] Fatal error in READ_N_FILE request from client %ld.\n", worker_no, fd_client);
+                    logger("[THREAD %d] [READ_N_FILES_FAIL] Fatal error in READ_N_FILES request from client %ld.\n", worker_no, fd_client);
                     result.code = MW_FATAL_ERROR;
                 } else {
                     logger(
-                        "[THREAD %d] [READ_N_FILE_FAIL] Non-fatal error in READ_N_FILE request from client %ld: %s.\n", 
+                        "[THREAD %d] [READ_N_FILES_FAIL] Non-fatal error in READ_N_FILES request from client %ld: %s.\n", 
                         worker_no, fd_client, thread_res_to_msg(res)
                     );
                     result.code = MW_NON_FATAL_ERROR;
@@ -220,7 +220,33 @@ void* worker_thread(void* arg){
 
                 break;
             }
+            
+            case REMOVE_FILE: {
+                logger("[THREAD %d] [REMOVE_FILE] Request from client %ld is REMOVE_FILE.\n", worker_no, fd_client);
+                int res = remove_file(worker_no, fd_client);
 
+                if( writen(fd_client, &res, sizeof(int)) == -1){
+                    perror("Error in writing to client");
+                    result.code = MW_FATAL_ERROR;
+                    break;
+                }
+
+                // setting result code for main thread
+                if(res == SA_SUCCESS)
+                    result.code = MW_SUCCESS;
+                else if(res == SA_CLOSE || res == SA_ERROR){
+                    logger("[THREAD %d] [REMOVE_FILE_FAIL] Fatal error in REMOVE_FILE request from client %ld.\n", worker_no, fd_client);
+                    result.code = MW_FATAL_ERROR;
+                } else {
+                    logger(
+                        "[THREAD %d] [REMOVE_FILE_FAIL] Non-fatal error in REMOVE_FILE request from client %ld: %s.\n", 
+                        worker_no, fd_client, thread_res_to_msg(res)
+                    );
+                    result.code = MW_NON_FATAL_ERROR;
+                }
+
+                break;
+            }
             default:
                 result.code = MW_FATAL_ERROR;
                 break;
