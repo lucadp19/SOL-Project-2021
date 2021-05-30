@@ -18,7 +18,7 @@ static void clean_req_node(node_t* node);
 static int add_to_current_time(long sec, long nsec, struct timespec* res);
 static void cleanup();
 
-#define TEST
+// #define TEST
 
 int main(int argc, char* argv[]){
     if( atexit(cleanup) == -1){

@@ -27,7 +27,7 @@ int execute_requests(){
         switch(curr->key[0]){
             case 'w': {
                 if(p_option)
-                    printf("Sending files to server (option -w).");
+                    printf("Sending files to server (option -w).\n");
                 char* exp_dir = NULL;
                 if(curr->next != NULL && curr->next->key[0] == 'D'){
                     exp_dir = (char*)curr->next->data;
@@ -39,13 +39,16 @@ int execute_requests(){
                 str_long_pair_t* arg = (str_long_pair_t*)curr->data;
                 char* dir = arg->dir;
                 long n_files = arg->n_files;
+                if(n_files == 0)
+                    n_files = -1;
 
                 int res = rec_scan_dirs(dir, exp_dir, n_files);
-                if( res > 0 ){
+                if( res >= 0 ){
                     if(p_option)
                         printf("Sent %d files to server (option -w).", res);
                 } else { // deal with error
-
+                    if(p_option)
+                        printf("There was an error: code %d :(\n", res);
                 }
 
                 GO_TO_NEXT;
@@ -167,6 +170,8 @@ int execute_requests(){
                 
 
                 long N = (long)curr->data;
+                if(N == 0) 
+                    N = -1;
                 if( readNFiles(N, exp_dir) == -1){
                     perror("Error in readNFiles");
                     GO_TO_NEXT;
@@ -214,13 +219,13 @@ static int rec_scan_dirs(const char* dirname, const char* exp_dir, int N){
     DIR* d;
     struct dirent* dir;
 
-
     if( (d = opendir(dirname)) == NULL)
         return -2;
     
     int n_reads = 0;
     int dir_len = strlen(dirname);
     errno = 0;
+    printf("N = %d, n_reads = %d\n", N, n_reads);
     while( (N == -1 || n_reads < N) && (dir = readdir(d)) != NULL ){
         // skipping . and ..
         if(strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0){

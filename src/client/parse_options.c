@@ -310,12 +310,14 @@ void validate_options(){
                     fprintf(stderr, "Option -d must only be used after one of -r or -R. Aborting.\n");
                     exit(EXIT_FAILURE);
                 }
+                break;
 
             case 'D': 
                 if(curr->prev == NULL || (curr->prev->key[0] != 'w' && curr->prev->key[0] != 'W')) {
                     fprintf(stderr, "Option -d must only be used after one of -r or -R. Aborting.\n");
                     exit(EXIT_FAILURE);
                 }
+                break;
         
             default: break;
         }
