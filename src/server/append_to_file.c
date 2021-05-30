@@ -58,11 +58,17 @@ int append_to_file(int worker_no, long fd_client){
         return SA_NO_FILE;
     }
 
-    file->last_use = time(NULL);
+    // locking file
+    file_writer_lock(file);
+
+    // updating file contents
     file->contents = safe_realloc(file->contents, file->size + size);
     memcpy((unsigned char*)(file->contents) + file->size, buf, size);
     file->size += size;
     free(buf);
+
+    // updating last use time
+    file->last_use = time(NULL);
 
     safe_pthread_mutex_lock(&curr_state_mtx);
     curr_state.space += size;
@@ -74,18 +80,23 @@ int append_to_file(int worker_no, long fd_client){
         file->can_be_expelled = true;
     }
     safe_pthread_mutex_unlock(&curr_state_mtx);
+    
+    // unlocking locks
+    file_writer_unlock(file);
     safe_pthread_mutex_unlock(&files_mtx);
 
     // notify client of success up until now
     int current_res = SA_SUCCESS;
     if( writen(fd_client, &current_res, sizeof(int)) == -1 ){
         list_delete(&to_expell, files_node_cleaner);
+        free(pathname);
         return SA_ERROR;
     }
 
     // sending files to client
     if( send_list_of_files(worker_no, fd_client, to_expell, true) == -1){
         list_delete(&to_expell, files_node_cleaner);
+        free(pathname);
         return SA_ERROR;
     }
     list_delete(&to_expell, files_node_cleaner);
