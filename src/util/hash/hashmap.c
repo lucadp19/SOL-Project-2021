@@ -11,6 +11,18 @@ static inline int _hashmap_insert(hashmap_t* map, const char* key, void* data){
     return 0;
 }
 
+static void _hashmap_free_nodes(hashmap_t** map){
+     if(*map == NULL) return;
+
+    for(int i = 0; i < (*map)->nlist; i++){
+        list_delete(&(*map)->list[i], free_only_node);
+    }
+    free((*map)->list);
+    free(*map);
+
+    *map = NULL;
+}
+
 static int hashmap_expand(hashmap_t** map){
     if(*map == NULL){
         errno = EINVAL;
@@ -33,7 +45,7 @@ static int hashmap_expand(hashmap_t** map){
         }
     } 
 
-    hashmap_free(map);
+    _hashmap_free_nodes(map);
     *map = new_map;
 
     return 0;
