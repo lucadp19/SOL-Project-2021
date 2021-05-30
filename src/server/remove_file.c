@@ -28,7 +28,11 @@ int remove_file(int worker_no, long fd_client){
         free(pathname);
         return SA_SUCCESS;
     }
+
+    file_writer_lock(to_remove);
+
     if(to_remove->fd_lock != fd_client){
+        file_writer_unlock(to_remove);
         safe_pthread_mutex_unlock(&files_mtx);
         free(pathname);
         return SA_NOT_LOCKED;
@@ -36,6 +40,8 @@ int remove_file(int worker_no, long fd_client){
 
     hashmap_remove(files, pathname, NULL, (void**)&to_remove);
     file_delete(to_remove);
+
+    // no need to destroy mutex
 
     safe_pthread_mutex_unlock(&files_mtx);
 
