@@ -24,6 +24,7 @@ int writeFile(const char* pathname, const char* dirname){
     // ----- READING FILE ------ //
     FILE* file;
     if( (file = fopen(pathname, "rb")) == NULL ){
+        // TODO choose errno for fopen ?
         return -1;
     }
 
@@ -33,6 +34,7 @@ int writeFile(const char* pathname, const char* dirname){
     rewind(file);
     if(file_size == -1){
         fclose(file);
+        // TODO: choose errno for file_size of -1
         return -1;
     }
 
@@ -52,24 +54,29 @@ int writeFile(const char* pathname, const char* dirname){
     // writing op_code
     if( writen(fd_sock, &op_code, sizeof(op_code_t)) == -1) {
         free(buffer);
+        errno = EBADE;
         return -1;
     }
     // writing pathname
     if( writen(fd_sock, &len, sizeof(int)) == -1) {
         free(buffer);
+        errno = EBADE;
         return -1;
     }
     if( writen(fd_sock, (void*)pathname, (len+1)*sizeof(char)) == -1) {
         free(buffer);
+        errno = EBADE;
         return -1;
     }
     // writing file
     if( writen(fd_sock, &file_size, sizeof(long)) == -1) {
         free(buffer);
+        errno = EBADE;
         return -1;
     }
     if( writen(fd_sock, buffer, file_size) == -1) {
         free(buffer);
+        errno = EBADE;
         return -1;
     }
 
@@ -81,8 +88,7 @@ int writeFile(const char* pathname, const char* dirname){
     // reading result before possible file expulsion
     int res, l;
     if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
-        // TODO: EBADF because bad communication ?
-        errno = EBADF;
+        errno = EBADE;
         return -1;
     }
     if(res != SA_SUCCESS){
@@ -93,15 +99,6 @@ int writeFile(const char* pathname, const char* dirname){
     // reading and writing expelled files
     if( write_files_sent_by_server(dirname) == -1)
         return -1;
-
-    // // reading final result
-    // if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
-    //     // TODO: EBADF because bad communication ?
-    //     errno = EBADF;
-    //     return -1;
-    // }
-
-    // errno = convert_res_to_errno(res);
-    // if(res != 0) return -1;
+    
     return 0;
 }

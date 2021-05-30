@@ -14,20 +14,28 @@ int openFile(const char* pathname, int flags){
     // want to open file
     op_code_t op_code = OPEN_FILE;
     debug("Writing opcode\n");
-    if( writen(fd_sock, (void*)&op_code, sizeof(op_code_t)) == -1)
+    if( writen(fd_sock, (void*)&op_code, sizeof(op_code_t)) == -1){
+        errno = EBADE;
         return -1;
+    }
 
     // writing parameters
     int len = strlen(pathname);
     debug("Writing len\n");
-    if( writen(fd_sock, &len, sizeof(int)) == -1)
+    if( writen(fd_sock, &len, sizeof(int)) == -1){ 
+        errno = EBADE;
         return -1;
+    }
     debug("Writing pathname");
-    if( writen(fd_sock, (void*)pathname, len + 1) == -1)
+    if( writen(fd_sock, (void*)pathname, len + 1) == -1){ 
+        errno = EBADE;
         return -1;
+    }
     debug("Writing flags");
-    if( writen(fd_sock, &flags, sizeof(int)) == -1)
+    if( writen(fd_sock, &flags, sizeof(int)) == -1){ 
+        errno = EBADE;
         return -1;
+    }
     
     last_op.is_open = true;
     last_op.success = false;
@@ -40,12 +48,11 @@ int openFile(const char* pathname, int flags){
     int res;
     int l;
     if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
-        // TODO: EBADF because bad communication ?
-        errno = EBADF;
+        errno = EBADE;
         return -1;
     } 
     
-    if(res != 0) {
+    if(res != SA_SUCCESS) {
        last_op.success = false;
        errno = convert_res_to_errno(res);
        return -1;

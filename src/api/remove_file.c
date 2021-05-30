@@ -13,17 +13,24 @@ int removeFile(const char* pathname){
 
     // want to remove file
     op_code_t op_code = REMOVE_FILE;
-    if( writen(fd_sock, &op_code, sizeof(op_code_t)) == -1)
+    if( writen(fd_sock, &op_code, sizeof(op_code_t)) == -1){
+        errno = EBADE;
         return -1;
+    }
 
     int len = strlen(pathname);
-    if( writen(fd_sock, &len, sizeof(int)) == -1)
+    if( writen(fd_sock, &len, sizeof(int)) == -1){
+        errno = EBADE;
         return -1;
-    if( writen(fd_sock, (void*)pathname, len + 1) == -1)
+    }
+    if( writen(fd_sock, (void*)pathname, len + 1) == -1){
+        errno = EBADE;
         return -1;
+    }
     
     int l, res;
     if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
+        errno = EBADE;
         return -1;
     }
 

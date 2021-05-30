@@ -14,19 +14,23 @@ int readNFiles(int N, const char* dirname){
     op_code_t op_code = READ_N_FILES;
 
     // sending request to server
-    if( writen(fd_sock, &op_code, sizeof(op_code_t)) == -1)
+    if( writen(fd_sock, &op_code, sizeof(op_code_t)) == -1){
+        errno = EBADE;
         return -1;
-    if( writen(fd_sock, &N, sizeof(int)) == -1)
+    }
+    if( writen(fd_sock, &N, sizeof(int)) == -1){
+        errno = EBADE;
         return -1;
+    }
     
     // reading success/failure
     int l, res;
     if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
-        errno = EBADF;
+        errno = EBADE;
         return -1;
     } if( res != SA_SUCCESS ){
         errno = convert_res_to_errno(res);
-        return (res == SA_SUCCESS ? 0 : -1);    
+        return -1;    
     }
 
     // can read files
@@ -34,12 +38,5 @@ int readNFiles(int N, const char* dirname){
         return -1;
     }
 
-    // reading final result
-    // if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
-    //     errno = EBADF;
-    //     return -1;
-    // }
-    // errno = convert_res_to_errno(res);
-    // return (res == SA_SUCCESS ? 0 : -1);
     return 0;
 }

@@ -6,7 +6,6 @@
 - Check the consistency of error checking
 
 ## Server
-- Implement reader-writer locks
 - Before read/write/append/everything one should have opened the file: check it!
 
 ## Client

@@ -11,19 +11,30 @@ int appendToFile(const char* pathname, void* buf, size_t size, const char* dirna
     int l, res;
 
     RESET_LAST_OP;
-    op_code_t op_code = APPEND_TO_FILE;
-    if( writen(fd_sock, (void*)&op_code, sizeof(op_code_t)) == -1)
-        return -1;
     
+    op_code_t op_code = APPEND_TO_FILE;
+    if( writen(fd_sock, (void*)&op_code, sizeof(op_code_t)) == -1){
+        errno = EBADE;
+        return -1;
+    }
+
     int len = strlen(pathname);
-    if( writen(fd_sock, &len, sizeof(int)) == -1)
+    if( writen(fd_sock, &len, sizeof(int)) == -1){
+        errno = EBADE;
         return -1;
-    if( writen(fd_sock, (void*)pathname, len + 1) == -1)
+    }
+    if( writen(fd_sock, (void*)pathname, len + 1) == -1){
+        errno = EBADE;
         return -1;
-    if( writen(fd_sock, &size, sizeof(size_t)) == -1)
+    }
+    if( writen(fd_sock, &size, sizeof(size_t)) == -1){
+        errno = EBADE;
         return -1;
-    if( writen(fd_sock, buf, size) == -1)
+    }
+    if( writen(fd_sock, buf, size) == -1){
+        errno = EBADE;
         return -1;
+    }
 
     // reading partial result
     if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){

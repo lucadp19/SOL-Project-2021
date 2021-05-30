@@ -10,7 +10,10 @@
 int write_files_sent_by_server(const char* dirname){
     // ---- READING FILES FROM SERVER ---- //
     list_t* files;
-    if( (files = empty_list()) == NULL) return -1;
+    if( (files = empty_list()) == NULL) {
+        errno = ENOMEM;
+        return -1;
+    }
     int l;
 
     while(true){
@@ -20,6 +23,7 @@ int write_files_sent_by_server(const char* dirname){
 
         if( (l = readn(fd_sock, &path_len, sizeof(int))) == -1 || l == 0){
             list_delete(&files, free_node_size_n_buf);
+            errno = EBADE;
             return -1;
         }
 
@@ -34,6 +38,7 @@ int write_files_sent_by_server(const char* dirname){
             list_delete(&files, free_node_size_n_buf);
             free((void*)path);
             free(file);
+            errno = EBADE;
             return -1;
         }
 
@@ -41,6 +46,7 @@ int write_files_sent_by_server(const char* dirname){
             list_delete(&files, free_node_size_n_buf);
             free((void*)path);
             free(file);
+            errno = EBADE;
             return -1;
         }
 
@@ -53,6 +59,7 @@ int write_files_sent_by_server(const char* dirname){
                 free((void*)path);
                 free(file->buf);
                 free(file);
+                errno = EBADE;
                 return -1;
             }
         }
@@ -61,6 +68,7 @@ int write_files_sent_by_server(const char* dirname){
             list_delete(&files, free_node_size_n_buf);
             free((void*)path);
             free(file);
+            errno = EBADE;
             return -1;
         }
     }
@@ -68,7 +76,7 @@ int write_files_sent_by_server(const char* dirname){
     // ----- READING FINAL ANSWER FROM SERVER ----- //
     int res;
     if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
-        errno = EBADF;
+        errno = EBADE;
         return -1;
     } if (res != SA_SUCCESS){
         errno = convert_res_to_errno(res);
@@ -77,6 +85,7 @@ int write_files_sent_by_server(const char* dirname){
 
     
     if( write_list_of_files_into_dir(files, dirname) == -1 ) {
+        // TODO: actually this always returns 0
         list_delete(&files, free_node_size_n_buf);
         return -1;
     }
