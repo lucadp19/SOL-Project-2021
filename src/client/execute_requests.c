@@ -1,5 +1,8 @@
 #include "client.h"
 #include "util/files.h"
+#include <dirent.h>
+
+static int rec_scan_dirs(const char* dirname, const char* exp_dir, int N);
 
 int execute_requests(){
     node_t* curr = request_q->head;
@@ -16,6 +19,34 @@ int execute_requests(){
         } else nanosleep(&wait_time, NULL); // else wait for the time interval
         
         switch(curr->key[0]){
+            case 'w': {
+                if(p_option)
+                    printf("Sending files to server (option -w).");
+                char* exp_dir = NULL;
+                if(curr->next != NULL && curr->next->key[0] == 'D'){
+                    exp_dir = (char*)curr->next->data;
+                    if(p_option) 
+                        printf("Writing expelled files in folder %s (option -D was set).\n", exp_dir);
+                } else 
+                    if(p_option) printf("Deleting expelled files (option -D was not set).\n");
+                
+                str_long_pair_t* arg = (str_long_pair_t*)curr->data;
+                char* dir = arg->dir;
+                long n_files = arg->n_files;
+
+                int res = rec_scan_dirs(dir, exp_dir, n_files);
+                if( res > 0 ){
+                    if(p_option)
+                        printf("Sent %d files to server (option -w).", res);
+                } else { // deal with error
+
+                }
+
+                if(dir == NULL) curr = curr->next;
+                else curr = curr->next->next;
+                break;
+            }
+
             case 'W': {
                 if(p_option)
                     printf("Sending files to server (option -W).\n");
@@ -56,6 +87,7 @@ int execute_requests(){
 
                 if(dir == NULL) curr = curr->next;
                 else curr = curr->next->next;
+                break;
             }
 
             case 'r': {
@@ -111,7 +143,10 @@ int execute_requests(){
 
                 if(dir == NULL) curr = curr->next;
                 else curr = curr->next->next;
+                break;
             }
+
+
 
             default:
                 fprintf(stderr, "Option not implemented :D\n");
@@ -120,4 +155,84 @@ int execute_requests(){
         }
     }
     return 0;
+}
+
+static int rec_scan_dirs(const char* dirname, const char* exp_dir, int N){
+    DIR* d;
+    struct dirent* dir;
+
+
+    if( (d = opendir(dirname)) == NULL)
+        return -2;
+    
+    int n_reads = 0;
+    int dir_len = strlen(dirname);
+    errno = 0;
+    while( (N == -1 || n_reads < N) && (dir = readdir(d)) != NULL ){
+        // skipping . and ..
+        if(strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0){
+            errno = 0;
+            continue;
+        }
+
+        // creating new path: "old_dir_path/new_file"
+        int new_len = dir_len + strlen(dir->d_name) + 1; // +1 because of the /
+        char* new_path = safe_calloc(new_len + 1, sizeof(char));
+        snprintf(new_path, new_len + 1, "%s/%s", dirname, dir->d_name);
+
+        struct stat info;
+        if( stat(new_path, &info) == -1){
+            perror("Error in stat");
+            free(new_path);
+            return -1;
+        }
+
+        if(S_ISDIR(info.st_mode)) {
+            if(p_option) printf("Recursively getting files from subdirectory %s.\n", new_path);
+
+            int res = rec_scan_dirs(new_path, exp_dir, (N == -1 ? -1 : N - n_reads) );
+            if( res >= 0 ){ // read some files!
+                n_reads += res;
+            } else { // do something with error
+                switch(res){
+                    case -2:
+                        perror("Could not open subdirectory");
+                        free(new_path);
+                        errno = 0;
+                        break;
+                    default: break;
+                }
+            }
+        } else { // found file
+            if(p_option) printf("Sending file %s to server.\n", new_path);
+
+            if( openFile(new_path, O_CREATE | O_LOCK) == -1){
+                perror("Error in open file");
+                free(new_path);
+                errno = 0;
+                continue;
+            }
+            if( writeFile(new_path, exp_dir) == -1 ){
+                perror("Error in writing file");
+                free(new_path);
+                errno = 0;
+                continue;
+            }
+            if( closeFile(new_path) == -1 ){
+                perror("Error in closing file");
+                free(new_path);
+                errno = 0;
+                continue;
+            }
+
+            n_reads++;
+        }
+        errno = 0;
+    } if( errno != 0 ){
+        closedir(d);
+        return -1;
+    }
+
+    closedir(d);
+    return n_reads;
 }
