@@ -1,6 +1,4 @@
 #include "server.h"
-#include "util/files.h"
-
 
 static int create_file(file_t** file, char* pathname, long flags, long fd_client);
 
