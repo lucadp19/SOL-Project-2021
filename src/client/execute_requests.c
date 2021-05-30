@@ -2,6 +2,12 @@
 #include "util/files.h"
 #include <dirent.h>
 
+#define GO_TO_NEXT do {                 \
+        if(exp_dir == NULL)             \
+            curr = curr->next;          \
+        else curr = curr->next->next;   \
+    } while(0)   
+
 static int rec_scan_dirs(const char* dirname, const char* exp_dir, int N);
 
 int execute_requests(){
@@ -42,19 +48,18 @@ int execute_requests(){
 
                 }
 
-                if(dir == NULL) curr = curr->next;
-                else curr = curr->next->next;
+                GO_TO_NEXT;
                 break;
             }
 
             case 'W': {
                 if(p_option)
                     printf("Sending files to server (option -W).\n");
-                char* dir = NULL;
+                char* exp_dir = NULL;
                 if(curr->next != NULL && curr->next->key[0] == 'D'){
-                    dir = (char*)curr->next->data;
+                    exp_dir = (char*)curr->next->data;
                     if(p_option) 
-                        printf("Writing expelled files in folder %s (option -D was set).\n", dir);
+                        printf("Writing expelled files in folder %s (option -D was set).\n", exp_dir);
                 } else 
                     if(p_option) printf("Deleting expelled files (option -D was not set).\n");
                 
@@ -65,13 +70,15 @@ int execute_requests(){
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
                             perror("Open file in option -w");
+                            GO_TO_NEXT;
                             continue;
                         }
                     }
-                    if( writeFile(file->key, dir) == -1 ) {
+                    if( writeFile(file->key, exp_dir) == -1 ) {
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
                             perror("Write file in option -w");
+                            GO_TO_NEXT;
                             continue;
                         }
                     }
@@ -79,27 +86,27 @@ int execute_requests(){
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
                             perror("Close file in option -w");
+                             GO_TO_NEXT;
                             continue;
                         }
                     }
                     file = file->next;
                 }
 
-                if(dir == NULL) curr = curr->next;
-                else curr = curr->next->next;
+                GO_TO_NEXT;
                 break;
             }
 
             case 'r': {
                 if(p_option)
                     printf("Reading files from server (option -r).\n");
-                char* dir = NULL;
+                char* exp_dir = NULL;
                 if(curr->next != NULL && curr->next->key[0] == 'd'){
-                    dir = (char*)curr->next->data;
+                    exp_dir = (char*)curr->next->data;
                     if(p_option)
-                        printf("Writing read files in folder %s (option -r was set).\n", dir);
+                        printf("Writing read files in folder %s (option -d was set).\n", exp_dir);
                 } else 
-                    if(p_option) printf("Deleting read files (option -r was not set).\n");
+                    if(p_option) printf("Deleting read files (option -d was not set).\n");
                 
                 list_t* files = (list_t*)curr->data;
                 node_t* file = files->head;
@@ -115,6 +122,7 @@ int execute_requests(){
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
                             perror("Open file in option -w");
+                            GO_TO_NEXT;
                             continue;
                         }
                     }
@@ -124,6 +132,7 @@ int execute_requests(){
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
                             perror("Write file in option -w");
+                            GO_TO_NEXT;
                             continue;
                         }
                     }
@@ -133,20 +142,40 @@ int execute_requests(){
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
                             perror("Close file in option -w");
+                            GO_TO_NEXT;
                             continue;
                         }
                     }
                     file = file->next;
                 }
 
-                write_list_of_files_into_dir(to_write, dir);
+                write_list_of_files_into_dir(to_write, exp_dir);
 
-                if(dir == NULL) curr = curr->next;
-                else curr = curr->next->next;
+                GO_TO_NEXT;
                 break;
             }
 
+            case 'R': {
+                if(p_option) printf("Reading N files from server (option -R).\n");
+                char* exp_dir = NULL;
+                if(curr->next != NULL && curr->next->key[0] == 'd'){
+                    exp_dir = (char*)curr->next->data;
+                    if(p_option)
+                        printf("Writing read files in folder %s (option -d was set).\n", exp_dir);
+                } else 
+                    if(p_option) printf("Deleting read files (option -d was not set).\n");
+                
 
+                long N = (long)curr->data;
+                if( readNFiles(N, exp_dir) == -1){
+                    perror("Error in readNFiles");
+                    GO_TO_NEXT;
+                    continue;
+                }
+
+                GO_TO_NEXT;
+                break;   
+            }
 
             default:
                 fprintf(stderr, "Option not implemented :D\n");
