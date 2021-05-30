@@ -119,7 +119,7 @@ int open_file(int worker_no, long fd_client){
     file->last_use = time(NULL);
 
     // unlocking things
-    file_reader_unlock(file);
+    file_writer_unlock(file);
     safe_pthread_mutex_unlock(&files_mtx);
 
     // logging info
