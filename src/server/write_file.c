@@ -51,32 +51,39 @@ int write_file(int worker_no, long fd_client){
         return SA_NO_FILE;
     }
 
-    // don't need it anymore
-    free(pathname);
+    // locking file
+    file_writer_lock(file);
 
     // file isn't locked
     if(file->fd_lock != fd_client){
+        file_writer_unlock(file);
         safe_pthread_mutex_unlock(&files_mtx);
+        free(pathname);
         free(buf);
         return SA_NOT_LOCKED;
     }
     // file isn't empty
     if(file->size != 0){
+        file_writer_unlock(file);
         safe_pthread_mutex_unlock(&files_mtx);
+        free(pathname);
         free(buf);
         return SA_NOT_EMPTY;
     }
     // file is too big
     if(size > server_config.max_space){
+        file_writer_unlock(file);
         safe_pthread_mutex_unlock(&files_mtx);
+        free(pathname);
         free(buf);
         return SA_TOO_BIG;
     }
 
-
     list_t* to_expell;
     if( (to_expell = empty_list()) == NULL){
+        file_writer_unlock(file);
         safe_pthread_mutex_unlock(&files_mtx);
+        free(pathname);
         free(buf);
         return SA_ERROR; 
     }
@@ -95,24 +102,30 @@ int write_file(int worker_no, long fd_client){
         file->can_be_expelled = true;
     }
     safe_pthread_mutex_unlock(&curr_state_mtx);
+
+    // unlocking file and general mutex
+    file_writer_unlock(file);
     safe_pthread_mutex_unlock(&files_mtx);   
 
     // notify client of success up until now
     int current_res = SA_SUCCESS;
     if( writen(fd_client, &current_res, sizeof(int)) == -1 ){
+        free(pathname);
         list_delete(&to_expell, files_node_cleaner);
         return SA_ERROR;
     }
 
     // sending files to client
     if( send_list_of_files(worker_no, fd_client, to_expell, true) == -1){
+        free(pathname);
         list_delete(&to_expell, files_node_cleaner);
         return SA_ERROR;
     }
 
-    logger("[THREAD %d] [WRITE_FILE_SUCCESS] Successfully written file \"%s\" into server.\n", worker_no, file->path_name);
-    logger("[THREAD %d] [WRITE_FILE_SUCCESS][WB] %lu\n", worker_no, file->size);
-    
+    logger("[THREAD %d] [WRITE_FILE_SUCCESS] Successfully written file \"%s\" into server.\n", worker_no, pathname);
+    logger("[THREAD %d] [WRITE_FILE_SUCCESS][WB] %lu\n", worker_no, size);
+
+    free(pathname);    
     list_delete(&to_expell, files_node_cleaner);
     return SA_SUCCESS;
 }
