@@ -44,6 +44,8 @@ typedef enum {
     CLOSE_SERVER
 } server_mode_t;
 
+// ------------- FILES ------------- //
+
 /**
  * A file in the server filesystem.
  */
@@ -62,8 +64,16 @@ typedef struct {
      * who have opened this file.
      */
     hashtbl_t* fd_open;
+    /** Mutex to regulate access to this file. */
+    pthread_mutex_t order_mtx;
     /** Mutex to modify this file. */
     pthread_mutex_t file_mtx;
+    /** Conditional variable to gain access to this file. */
+    pthread_cond_t access_cond;
+    /** Number of readers who are now using this file. */
+    unsigned int n_readers;
+    /** Number of writers who are now using this file. */
+    unsigned int n_writers;
     /** Time of last use to implement LRU. */
     time_t last_use;
     /** Bool to decide if file currently can or cannot be expelled
@@ -71,6 +81,15 @@ typedef struct {
      */ 
     bool can_be_expelled;
 } file_t;
+
+/** Locks a file to allow reading operations. */
+void file_reader_lock(file_t* file);
+/** Unlocks a file previously locked in reading mode. */
+void file_reader_unlock(file_t* file);
+/** Locks a file to allow reading and writing operations. */
+void file_writer_lock(file_t* file);
+/** Unlocks a file previously locked in writing mode. */
+void file_writer_unlock(file_t* file);
 
 // ------ GLOBAL VARIABLES ------ //
 extern server_config_t server_config;
