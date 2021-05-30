@@ -138,7 +138,7 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    // --------- SOCKET ---------- //
+    // ---------- SOCKET ---------- //
     long fd_listen = -1;
     unlink_socket();
     atexit(unlink_socket);
@@ -497,11 +497,13 @@ static void close_client(long fd_client){
     safe_pthread_mutex_lock(&files_mtx);
     while( (err = hashmap_iter_get_next(iter, files)) == 0){
         file_t* curr_file = (file_t*)iter->current_pos->data;
-        // TODO: should I lock current file?
+
+        file_writer_lock(curr_file);
         if(curr_file->fd_lock == fd_client) 
             curr_file->fd_lock = -1;
         hashtbl_remove(curr_file->fd_open, fd_client);
-    } if( err == -1 ){
+        file_writer_unlock(curr_file);
+    } if( err == -1 ){ // cannot happen as both files and iter are != NULL
         return; // ? TODO: think
     }
     free(iter);
