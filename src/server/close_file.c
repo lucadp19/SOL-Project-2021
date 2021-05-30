@@ -32,12 +32,12 @@ int close_file(int worker_no, long fd_client){
         return SA_NO_FILE;
     }
     // otherwise remove client
-    safe_pthread_mutex_lock(&(file->file_mtx));
+    file_writer_lock(file);
     hashtbl_remove(file->fd_open, fd_client);
     // if file was locked, unlock it
     if(file->fd_lock == fd_client)
         file->fd_lock = -1;
-    safe_pthread_mutex_unlock(&(file->file_mtx));
+    file_writer_unlock(file);
     safe_pthread_mutex_unlock(&files_mtx);
 
     logger("[THREAD %d] [CLOSE_FILE_SUCCESS] Successfully closed file \"%s\".\n", worker_no, pathname);
