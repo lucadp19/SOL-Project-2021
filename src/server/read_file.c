@@ -28,7 +28,7 @@ int read_file(int worker_no, long fd_client){
     }
 
     // locking file (in reader mode)
-    file_reader_lock(file);
+    file_reader_lock(to_send);
 
     // updating time of last use
     to_send->last_use = time(NULL);
