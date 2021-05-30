@@ -27,25 +27,32 @@ int read_file(int worker_no, long fd_client){
         return SA_NO_FILE;
     }
 
+    // locking file (in reader mode)
+    file_reader_lock(file);
+
     // updating time of last use
     to_send->last_use = time(NULL);
+
+    // unlocking general mutex (we don't need it anymore)
+    safe_pthread_mutex_unlock(&files_mtx);
+
 
     // notify client of success (until now)
     int current_res = SA_SUCCESS;
     if( writen(fd_client, &current_res, sizeof(int)) == -1 ){
-        safe_pthread_mutex_unlock(&files_mtx);
         return SA_ERROR;
     }
 
     // sending file to client
     if( send_single_file(worker_no, fd_client, to_send, false) == -1){
-        safe_pthread_mutex_unlock(&files_mtx);
         return SA_ERROR;
     }
 
-    safe_pthread_mutex_unlock(&files_mtx);
+    // size_t size = to_send->size;
+    file_reader_unlock(to_send);
 
     logger("[THREAD %d] [READ_FILE_SUCCESS] Successfully sent file \"%s\" to client.\n", worker_no, pathname);    
+    // logger("[THREAD %d] [READ_FILE_SUCCESS][WB] %lu\n", worker_no, size);
     free(pathname);
 
     return SA_SUCCESS; 
