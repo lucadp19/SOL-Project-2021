@@ -1,5 +1,7 @@
 #include "server.h"
 
+static void reader_unlock_all(list_t* list);
+
 int read_n_files(int worker_no, long fd_client){
     int N, original_N;
     bool all_files = false;
@@ -31,7 +33,15 @@ int read_n_files(int worker_no, long fd_client){
 
     int err;
     while(N > 0 && (err = hashmap_iter_get_next(iter, files)) == 0){
-        if(list_push_back(file_list, NULL, iter->current_pos->data) == -1){
+        file_t* curr_file = (file_t*)iter->current_pos->data;
+
+        // locking current file
+        file_reader_lock(curr_file);
+
+        if(list_push_back(file_list, NULL, (void*)curr_file) == -1){
+            file_reader_unlock(curr_file);
+            reader_unlock_all(file_list);
+            
             safe_pthread_mutex_unlock(&files_mtx);
             list_delete(&file_list, free_only_node);
             // TODO ?
@@ -39,29 +49,32 @@ int read_n_files(int worker_no, long fd_client){
         }
         N--;
     } if( err == -1 ) {
+        reader_unlock_all(file_list);
+            
         safe_pthread_mutex_unlock(&files_mtx);
         list_delete(&file_list, free_only_node);
         return SA_ERROR;
     }
-
     free(iter);
+    // unlocking general mutex
+    safe_pthread_mutex_unlock(&files_mtx);
 
     // notify client of success up until now
     int current_res = SA_SUCCESS;
     if( writen(fd_client, &current_res, sizeof(int)) == -1){
-        safe_pthread_mutex_unlock(&files_mtx);
+        reader_unlock_all(file_list);
         list_delete(&file_list, free_only_node);
         return SA_ERROR;
     }
 
     // writing files to client
     if( send_list_of_files(worker_no, fd_client, file_list, true) == -1){
-        safe_pthread_mutex_unlock(&files_mtx);
+        reader_unlock_all(file_list);
         list_delete(&file_list, free_only_node);
         return SA_ERROR;
     }
 
-    safe_pthread_mutex_unlock(&files_mtx);
+    reader_unlock_all(file_list);
     list_delete(&file_list, free_only_node);
 
     if(all_files)
@@ -71,4 +84,12 @@ int read_n_files(int worker_no, long fd_client){
 
 
     return SA_SUCCESS;
+}
+
+static void reader_unlock_all(list_t* list){
+    node_t* curr = list->head;
+    while(curr != NULL){
+        file_reader_unlock((file_t*)curr->data);
+        curr = curr->next;
+    }
 }
