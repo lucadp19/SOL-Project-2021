@@ -16,6 +16,8 @@ int convert_res_to_errno(int res){
             return EPERM;
         case SA_TOO_BIG:
             return EFBIG;
+        case SA_NO_OPEN:
+            return ENOKEY;
         case SA_NOT_EMPTY:
             return EACCES;
         case SA_CLOSE:

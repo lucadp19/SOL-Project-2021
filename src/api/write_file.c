@@ -24,7 +24,7 @@ int writeFile(const char* pathname, const char* dirname){
     // ----- READING FILE ------ //
     FILE* file;
     if( (file = fopen(pathname, "rb")) == NULL ){
-        // TODO choose errno for fopen ?
+        errno = EIO;
         return -1;
     }
 
@@ -34,7 +34,7 @@ int writeFile(const char* pathname, const char* dirname){
     rewind(file);
     if(file_size == -1){
         fclose(file);
-        // TODO: choose errno for file_size of -1
+        errno = EIO;
         return -1;
     }
 
@@ -85,7 +85,7 @@ int writeFile(const char* pathname, const char* dirname){
     debug("File sent! Reading result from server...\n");
     // ---- READING RESULT FROM SERVER ---- //
 
-    // reading result before possible file expulsion
+// reading result before possible file expulsion
     int res, l;
     if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
         errno = EBADE;
