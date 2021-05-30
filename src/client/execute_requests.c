@@ -152,7 +152,22 @@ int execute_requests(){
                     file = file->next;
                 }
 
-                write_list_of_files_into_dir(to_write, exp_dir);
+                int err;
+                if( (err = write_list_of_files_into_dir(to_write, exp_dir)) < to_write->nelem) { 
+                    // I've written less files than I should have
+                    if(err == -1){
+                        perror("Error in writing files into directory");
+                        GO_TO_NEXT;
+                        continue;
+                    } else {
+                        fprintf(
+                            stderr, "Written %d files into %s instead of %d: %d writes failed.\n", 
+                            err, exp_dir, to_write->nelem, err-to_write->nelem
+                        );
+                        GO_TO_NEXT;
+                        continue;
+                    }
+                }
 
                 GO_TO_NEXT;
                 break;

@@ -83,11 +83,17 @@ int write_files_sent_by_server(const char* dirname){
         return -1;
     }
 
-    
-    if( write_list_of_files_into_dir(files, dirname) == -1 ) {
-        // TODO: actually this always returns 0
-        list_delete(&files, free_node_size_n_buf);
-        return -1;
+    int err;
+    if( (err = write_list_of_files_into_dir(files, dirname)) < files->nelem) { 
+        // I've written less files than I should have
+        if(err == -1){ // couldn't create directory
+            list_delete(&files, free_node_size_n_buf);
+            errno = ENOTEMPTY;
+            return -1;
+        } else {
+            errno = ECANCELED; // synonym for "written less files than requires"
+            return -1;
+        }
     }
     
     list_delete(&files, free_node_size_n_buf);

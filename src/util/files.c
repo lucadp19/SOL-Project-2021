@@ -5,11 +5,12 @@ int write_list_of_files_into_dir(list_t* files, const char* dirname){
 
     // ----- CREATING DIRECTORY ----- //
     if( mkdir_p(dirname) == -1){
-        list_delete(&files, free_node_size_n_buf);
         return -1;
     }
 
     // ----- WRITING FILE IN DIRECTORY ----- //
+    int no_written = 0;
+
     node_t* curr = files->head;
     int path_to_write_len = -1;
     char* path_to_write = NULL;
@@ -40,13 +41,14 @@ int write_list_of_files_into_dir(list_t* files, const char* dirname){
             continue;
         }
 
+        no_written++;
         fclose(to_write);
         curr = curr->next;
     }
     
     if(path_to_write != NULL) free(path_to_write);
     
-    return 0;
+    return no_written;
 }
 
 void free_node_size_n_buf(node_t* node){

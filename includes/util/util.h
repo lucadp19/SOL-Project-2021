@@ -15,6 +15,7 @@
 #include <signal.h>
 #include <pthread.h>
 
+#include <limits.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -25,9 +26,6 @@
 #include <sys/un.h>
 
 // --------------- GENERAL --------------- //
-
-#define PATH_MAX 128
-
 
 /**
  * Takes a string and converts it into a long.
