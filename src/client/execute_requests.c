@@ -177,8 +177,32 @@ int execute_requests(){
                 break;   
             }
 
+            case 'c': {
+                if(p_option) printf("Removing file from server (option -c).\n");
+                
+                list_t* files = (list_t*)curr->data;
+                node_t* file = files->head;
+
+                while(file != NULL){
+                    if( openFile(file->key, O_LOCK) == -1){
+                        perror("Error in openFile");
+                        file = file->next;
+                        continue;
+                    }
+                    if( removeFile(file->key) == -1){
+                        perror("Error in removeFile");
+                        file = file->next;
+                        continue;
+                    }
+                    file = file->next;
+                }
+
+                curr = curr->next;
+                break;
+            }
+
             default:
-                fprintf(stderr, "Option not implemented :D\n");
+                fprintf(stderr, "Option not implemented.\n");
                 curr = curr->next;
                 break;
         }
