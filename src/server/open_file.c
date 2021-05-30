@@ -63,6 +63,7 @@ int open_file(int worker_no, long fd_client){
         safe_pthread_mutex_lock(&curr_state_mtx);
         curr_state.files++;
         safe_pthread_mutex_unlock(&curr_state_mtx);
+        file_writer_unlock(file);
 
         debug("File added to fs!\n");
         safe_pthread_mutex_unlock(&files_mtx);
@@ -87,7 +88,8 @@ int open_file(int worker_no, long fd_client){
     // opening already created file
     safe_pthread_mutex_lock(&files_mtx);
 
-    if(!hashmap_contains(files, pathname)){
+    file_t* file;
+    if(hashmap_get_by_key(files, pathname, (void**)&file) == -1){
         safe_pthread_mutex_unlock(&files_mtx);
 
         free(pathname);
@@ -95,16 +97,14 @@ int open_file(int worker_no, long fd_client){
         return SA_NO_FILE;
     } else debug("File exists!\n");
 
-    file_t* file;
-    // cannot return -1 because file exists
-    hashmap_get_by_key(files, pathname, (void**)(&file));
-
     debug("File path: %s\n", file->path_name);
-    safe_pthread_mutex_lock(&(file->file_mtx));
+
+    // locking file for writing operations
+    file_writer_lock(file);
 
     if(IS_FLAG_SET(flags, O_LOCK)){ // want to lock
         if(file->fd_lock != -1){ // already locked
-            safe_pthread_mutex_unlock(&(file->file_mtx));
+            file_writer_unlock(file);
             safe_pthread_mutex_unlock(&files_mtx);
 
             free(pathname);
@@ -117,7 +117,9 @@ int open_file(int worker_no, long fd_client){
     hashtbl_insert(&(file->fd_open), fd_client);
     // updating last use
     file->last_use = time(NULL);
-    safe_pthread_mutex_unlock(&(file->file_mtx));
+
+    // unlocking things
+    file_reader_unlock(file);
     safe_pthread_mutex_unlock(&files_mtx);
 
     // logging info
@@ -142,18 +144,31 @@ int open_file(int worker_no, long fd_client){
 static int create_file(file_t** file, char* pathname, long flags, long fd_client){
     *file = safe_calloc(1, sizeof(file_t));
 
+    // general attrs
     (*file)->contents = NULL;
     (*file)->path_name = pathname;
     (*file)->size = 0;
     (*file)->can_be_expelled = false;
 
+    // setting lock
     if(IS_FLAG_SET(flags, O_LOCK))
         (*file)->fd_lock = fd_client;
     else (*file)->fd_lock = -1;
 
+    // initializing list of openers
     hashtbl_init(&((*file)->fd_open), 4, default_hashtbl_hash);
 
+    // init mutex/cond
     pthread_mutex_init(&((*file)->file_mtx), NULL);
+    pthread_mutex_init(&((*file)->order_mtx), NULL);
+    pthread_cond_init(&((*file)->access_cond), NULL);
+    (*file)->n_readers = 0;
+    (*file)->n_writers = 0;
+
+    // current thread gets mutex control
+    file_writer_lock(*file);
+
+    // updating time of last use
     (*file)->last_use = time(NULL);
 
     return 0;
