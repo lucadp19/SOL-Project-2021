@@ -10,6 +10,7 @@ INC_DIR		= ./includes
 BIN_DIR		= ./bin
 TEST_DIR	= ./tests
 LOG_DIR 	= ./logs
+SCRIPT_DIR  = ./scripts
 
 # Dynamic linking
 DYN_LINK = -L$(LIB_DIR) -Wl,-rpath,$(LIB_DIR)
@@ -94,7 +95,7 @@ create_dirs:
 # 	------------------ Cleaning ------------------	#
 
 .PHONY: clean
-clean:
+clean: clean_test1
 	@echo "Removing object files and executables..."
 	@rm -f vgcore.*
 	@rm -rf $(OBJ_DIR)/*
@@ -120,9 +121,17 @@ $(BIN_DIR)/list_test: $(TEST_DIR)/list_test.c $(LIB_DIR)/libutil.so
 
 # ---------------- Official Tests ----------------	#
 .PHONY : test1 test2
+.PHONY : clean_test1
 
 test1:
-	@echo "Test1 has not been written yet :("
+	$(SCRIPT_DIR)/test1.sh
+
+clean_test1:
+	@echo "Cleaning files created by test1..."
+	@rm -rf $(TEST_DIR)/test1/deleted
+	@rm -rf $(TEST_DIR)/test1/readnfiles
+	@rm -rf $(TEST_DIR)/test1/readsingle
+	@echo "Cleaning complete!"
 
 test2:
 	@echo "Test2 has not been written yet :("
