@@ -31,6 +31,7 @@ ${CLIENT} -f ${SOCK_NAME} -p -t 200 -R -d tests/test1/readnfiles -r tests/hashta
 
 sleep 1
 kill -SIGHUP ${SERVER_PID}
+echo -e "\n"
 sleep 1 # once again to make valgrind print stuff
 rm -f ${CONFIG}
 
