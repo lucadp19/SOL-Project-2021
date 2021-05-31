@@ -11,7 +11,7 @@ int write_files_sent_by_server(const char* dirname){
     // ---- READING FILES FROM SERVER ---- //
     list_t* files;
     if( (files = empty_list()) == NULL) {
-        errno = ENOMEM;
+        errno = ENOTRECOVERABLE;
         return -1;
     }
     int l;
@@ -68,7 +68,7 @@ int write_files_sent_by_server(const char* dirname){
             list_delete(&files, free_node_size_n_buf);
             free((void*)path);
             free(file);
-            errno = EBADE;
+            errno = ENOTRECOVERABLE;
             return -1;
         }
     }

@@ -32,7 +32,7 @@ int closeConnection(const char* sockname);
  *  - trying to create an already existing file, errno = [EEXIST];
  *  - trying to open (without O_CREAT) a file that doesn't exist, errno = [ENOENT];
  *  - trying to open-lock a file that is already locked, errno = [EBUSY];
- *  - fatal server error, errno = [ENOTRECOVERABLE];
+ *  - fatal server or API error, errno = [ENOTRECOVERABLE];
  *  - fatal error in communication, errno = [EBADE].
  */
 int openFile(const char* pathname, int flags);
@@ -46,7 +46,7 @@ int openFile(const char* pathname, int flags);
  *  - client is not connected to server, errno = [ENOTCONN];
  *  - trying to read a file that doesn't exist, errno = [ENOENT];
  *  - trying to read a non opened file, errno = [ENOKEY];
- *  - fatal server error, errno = [ENOTRECOVERABLE];
+ *  - fatal server or API error, errno = [ENOTRECOVERABLE];
  *  - fatal error in communication, errno = [EBADE].
  */
 int readFile(const char* pathname, void** buf, size_t* size);
@@ -61,7 +61,7 @@ int readFile(const char* pathname, void** buf, size_t* size);
  *  - client is not connected to server, errno = [ENOTCONN];
  *  - could not create directory dirname, errno = [ENOTEMPTY];
  *  - could not write every file into dirname, errno = [ECANCELED];
- *  - fatal server error, errno = [ENOTRECOVERABLE];
+ *  - fatal server or API error, errno = [ENOTRECOVERABLE];
  *  - fatal error in communication, errno = [EBADE].
  */
 int readNFiles(int N, const char* dirname);
@@ -83,7 +83,7 @@ int readNFiles(int N, const char* dirname);
  *  - could not open file pathname, errno = [EIO];
  *  - could not create directory dirname, errno = [ENOTEMPTY];
  *  - could not write every file into dirname, errno = [ECANCELED];
- *  - fatal server error, errno = [ENOTRECOVERABLE];
+ *  - fatal server or API error, errno = [ENOTRECOVERABLE];
  *  - fatal error in communication, errno = [EBADE].
  */
 int writeFile(const char* pathname, const char* dirname);
@@ -102,7 +102,7 @@ int writeFile(const char* pathname, const char* dirname);
  *  - the contents of the buffer are too big to fit into server, errno = [EFBIG];
  *  - could not create directory dirname, errno = [ENOTEMPTY];
  *  - could not write every file into dirname, errno = [ECANCELED];
- *  - fatal server error, errno = [ENOTRECOVERABLE];
+ *  - fatal server or API error, errno = [ENOTRECOVERABLE];
  *  - fatal error in communication, errno = [EBADE].
  */
 int appendToFile(const char* pathname, void* buf, size_t size, const char* dirname);
@@ -127,7 +127,7 @@ int unlockFile(const char* pathname);
  * Possible errors are:
  *  - client is not connected to server, errno = [ENOTCONN];
  *  - pathname is not the path of a file on server, errno = [ENOENT];
- *  - fatal server error, errno = [ENOTRECOVERABLE];
+ *  - fatal server or API error, errno = [ENOTRECOVERABLE];
  *  - fatal error in communication, errno = [EBADE].
  */
 int closeFile(const char* pathname);
@@ -141,7 +141,7 @@ int closeFile(const char* pathname);
  *  - pathname is not the path of a file on server, errno = [ENOENT];
  *  - pathname was not opened by client, errno = [ENOKEY];
  *  - pathname was not locked by client, errno = [EPERM];
- *  - fatal server error, errno = [ENOTRECOVERABLE];
+ *  - fatal server or API error, errno = [ENOTRECOVERABLE];
  *  - fatal error in communication, errno = [EBADE].
  */
 int removeFile(const char* pathname);
@@ -152,6 +152,6 @@ int removeFile(const char* pathname);
  * If errno is not one of the errnos set by this API,
  * it prints the usual perror message.
  */ 
-void api_perror(const char* msg);
+void API_perror(const char* msg);
 
 #endif
