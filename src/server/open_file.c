@@ -55,19 +55,27 @@ int open_file(int worker_no, long fd_client){
         }
         safe_pthread_mutex_unlock(&curr_state_mtx);
         file->can_be_expelled = true;
-        // deleting this file because there's nowhere to send it
-        file_delete(expelled);
 
         hashmap_insert(&files, pathname, file);
 
         safe_pthread_mutex_lock(&curr_state_mtx);
         curr_state.files++;
+        if(curr_state.files > curr_state.max_files) 
+            curr_state.max_files = curr_state.files;
         safe_pthread_mutex_unlock(&curr_state_mtx);
 
         file_writer_unlock(file);
         safe_pthread_mutex_unlock(&files_mtx);
         debug("File added to fs!\n");
 
+        // deleting the expelled file because there's nowhere to send it
+        if(expelled != NULL) {
+            logger(
+                "[THREAD %d] [OPEN_FILE][THROWN_AWAY] The file %s is to be destroyed because expelled by the replacement algoritm because the maximum number of files was reached.\n",
+                worker_no, expelled->path_name
+            );
+            file_delete(expelled);
+        }
         // logging info
         if( IS_FLAG_SET(flags, O_LOCK)) {
             logger(
@@ -161,6 +169,7 @@ static int create_file(file_t** file, char* pathname, long flags, long fd_client
 
     // initializing list of openers
     hashtbl_init(&((*file)->fd_open), 4, default_hashtbl_hash);
+    hashtbl_insert(&((*file)->fd_open), fd_client);
 
     // init mutex/cond
     pthread_mutex_init(&((*file)->file_mtx), NULL);
