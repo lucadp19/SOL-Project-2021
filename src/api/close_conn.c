@@ -4,8 +4,13 @@
 int closeConnection(const char* sockname){
     debug("sockname = %s, socket_path = %s", sockname, socket_path);
 
+    if(sockname == NULL){
+        errno = EINVAL;
+        return -1;
+    }
+
     // wrong socket name
-    if(sockname != socket_path){
+    if(strcmp(sockname, socket_path) != 0){
         // this socket is not connected
         errno = ENOTCONN;
         return -1;

@@ -10,6 +10,8 @@ static const char* errno_to_msg(int err){
     switch (err){
         case 0:
             return "success";
+        case EINVAL:
+            return "invalid argument passed to API function";
         case ENOTCONN:
             return "client is not connected to server";
         case ENOTEMPTY:
@@ -21,7 +23,7 @@ static const char* errno_to_msg(int err){
         case ENOSYS:
             return "operation is not implemented yet";
         case EIO:
-            return "could not open file";
+            return "could not open file on disk";
         case ENOTRECOVERABLE:
             return "fatal error in server or client application";
         case EBADE:

@@ -4,10 +4,15 @@
 #include "server-api-protocol.h"
 
 int appendToFile(const char* pathname, void* buf, size_t size, const char* dirname){
-     if(fd_sock == -1){
+    if(fd_sock == -1){
         errno = ENOTCONN;
         return -1;
     }  
+    if(pathname == NULL || buf == NULL){
+        errno = EINVAL;
+        return -1;
+    }
+
     int l, res;
 
     RESET_LAST_OP;

@@ -8,6 +8,10 @@ int removeFile(const char* pathname){
         errno = ENOTCONN;
         return -1;
     }  
+    if(pathname == NULL){
+        errno = EINVAL;
+        return -1;
+    }
 
     RESET_LAST_OP;
 

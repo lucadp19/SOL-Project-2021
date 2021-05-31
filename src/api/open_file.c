@@ -10,6 +10,11 @@ int openFile(const char* pathname, int flags){
         errno = ENOTCONN;
         return -1;
     } 
+
+    if(pathname == NULL){
+        errno = EINVAL;
+        return -1;
+    }
     
     // want to open file
     op_code_t op_code = OPEN_FILE;

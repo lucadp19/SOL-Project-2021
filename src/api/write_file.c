@@ -9,6 +9,10 @@ int writeFile(const char* pathname, const char* dirname){
         errno = ENOTCONN;
         return -1;
     }
+    if(pathname == NULL){
+        errno = EINVAL;
+        return -1;
+    }
 
     int len = strlen(pathname);
     if(!last_op.is_open || !last_op.create || !last_op.lock || !last_op.success || strncmp(last_op.path, pathname, len) ){
@@ -43,6 +47,7 @@ int writeFile(const char* pathname, const char* dirname){
         if(ferror(file)){
             free(buffer);
             fclose(file);
+            errno = EIO;
             return -1;
         }
     }

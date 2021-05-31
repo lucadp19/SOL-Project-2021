@@ -9,6 +9,10 @@ int readFile(const char* pathname, void** buf, size_t* size){
         errno = ENOTCONN;
         return -1;
     }
+    if(pathname == NULL || buf == NULL || size == NULL){
+        errno = EINVAL;
+        return -1;
+    }
 
     RESET_LAST_OP;
     int len = strlen(pathname);

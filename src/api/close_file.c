@@ -8,6 +8,10 @@ int closeFile(const char* pathname){
         errno = ENOTCONN;
         return -1;
     }
+    if(pathname == NULL){
+        errno = EINVAL;
+        return -1;
+    }
     // last operation isn't an open file anymore
     RESET_LAST_OP;
 
