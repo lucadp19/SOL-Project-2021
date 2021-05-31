@@ -30,15 +30,17 @@ int append_to_file(int worker_no, long fd_client){
         return SA_CLOSE;
     }
 
-    buf = safe_malloc(size);
-    if( (l = readn(fd_client, buf, size)) == -1){
-        free(pathname);
-        free(buf);
-        return SA_ERROR;
-    } if( l == 0 ) {
-        free(pathname);
-        free(buf);
-        return SA_CLOSE;
+    if(size > 0) {
+        buf = safe_malloc(size);
+        if( (l = readn(fd_client, buf, size)) == -1){
+            free(pathname);
+            free(buf);
+            return SA_ERROR;
+        } if( l == 0 ) {
+            free(pathname);
+            free(buf);
+            return SA_CLOSE;
+        }
     }
 
     file_t* file;
@@ -49,63 +51,66 @@ int append_to_file(int worker_no, long fd_client){
         return SA_ERROR;
     }
 
-    safe_pthread_mutex_lock(&files_mtx);
-    if(hashmap_get_by_key(files, pathname, (void**)&file) == -1){ // file not present => success
-        safe_pthread_mutex_unlock(&files_mtx);
-        list_delete(&to_expell, files_node_cleaner);
-        free(pathname);
+    if(size > 0){ // if size == 0 it's a waste of time
+        safe_pthread_mutex_lock(&files_mtx);
+        if(hashmap_get_by_key(files, pathname, (void**)&file) == -1){ // file not present => success
+            safe_pthread_mutex_unlock(&files_mtx);
+            list_delete(&to_expell, files_node_cleaner);
+            free(pathname);
+            free(buf);
+            return SA_NO_FILE;
+        }
+
+        // locking file
+        file_writer_lock(file);
+
+        // checking that client has previously opened the file
+        if(!hashtbl_contains(file->fd_open, fd_client)){
+            file_writer_unlock(file);
+            safe_pthread_mutex_unlock(&files_mtx);
+            list_delete(&to_expell, files_node_cleaner);
+            free(pathname);
+            free(buf);
+            return SA_NO_OPEN;
+        }
+
+        // checking that buf can be appended to file without going over space requirements
+        if(file->size + size > server_config.max_space){
+            file_writer_unlock(file);
+            safe_pthread_mutex_unlock(&files_mtx);
+            list_delete(&to_expell, files_node_cleaner);
+            free(pathname);
+            free(buf);
+            return SA_TOO_BIG;
+        } 
+
+
+        // updating file contents
+        file->contents = safe_realloc(file->contents, file->size + size);
+        memcpy((unsigned char*)(file->contents) + file->size, buf, size);
+        file->size += size;
         free(buf);
-        return SA_NO_FILE;
-    }
 
-    // locking file
-    file_writer_lock(file);
+        // updating last use time
+        file->last_use = time(NULL);
 
-    // checking that client has previously opened the file
-    if(!hashtbl_contains(file->fd_open, fd_client)){
+        safe_pthread_mutex_lock(&curr_state_mtx);
+        curr_state.space += size;
+        long size_to_remove = curr_state.space - server_config.max_space;
+        if(size_to_remove > 0){
+            file->can_be_expelled = false;
+            // maybe I should check the error
+            expell_multiple_LRU(size_to_remove, to_expell);
+            file->can_be_expelled = true;
+        }
+        safe_pthread_mutex_unlock(&curr_state_mtx);
+        
+        
+        // unlocking locks
         file_writer_unlock(file);
         safe_pthread_mutex_unlock(&files_mtx);
-        list_delete(&to_expell, files_node_cleaner);
-        free(pathname);
-        free(buf);
-        return SA_NO_OPEN;
     }
-
-    // checking that buf can be appended to file without going over space requirements
-    if(file->size + size > server_config.max_space){
-        file_writer_unlock(file);
-        safe_pthread_mutex_unlock(&files_mtx);
-        list_delete(&to_expell, files_node_cleaner);
-        free(pathname);
-        free(buf);
-        return SA_TOO_BIG;
-    } 
-
-
-    // updating file contents
-    file->contents = safe_realloc(file->contents, file->size + size);
-    memcpy((unsigned char*)(file->contents) + file->size, buf, size);
-    file->size += size;
-    free(buf);
-
-    // updating last use time
-    file->last_use = time(NULL);
-
-    safe_pthread_mutex_lock(&curr_state_mtx);
-    curr_state.space += size;
-    long size_to_remove = curr_state.space - server_config.max_space;
-    if(size_to_remove > 0){
-        file->can_be_expelled = false;
-        // maybe I should check the error
-        expell_multiple_LRU(size_to_remove, to_expell);
-        file->can_be_expelled = true;
-    }
-    safe_pthread_mutex_unlock(&curr_state_mtx);
     
-    // unlocking locks
-    file_writer_unlock(file);
-    safe_pthread_mutex_unlock(&files_mtx);
-
     // notify client of success up until now
     int current_res = SA_SUCCESS;
     if( writen(fd_client, &current_res, sizeof(int)) == -1 ){

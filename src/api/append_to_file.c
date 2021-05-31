@@ -36,7 +36,8 @@ int appendToFile(const char* pathname, void* buf, size_t size, const char* dirna
         errno = EBADE;
         return -1;
     }
-    if( writen(fd_sock, buf, size) == -1){
+    // if size == 0 nothing is to be written
+    if( size > 0 && writen(fd_sock, buf, size) == -1){
         errno = EBADE;
         return -1;
     }
