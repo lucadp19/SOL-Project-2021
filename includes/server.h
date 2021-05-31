@@ -25,10 +25,18 @@ typedef struct {
  * occupied since the start.
  */
 typedef struct {
+    /* no. of files */
     unsigned int files;
+    /* occupied space */
     size_t space;
+    /* number of connections */
+    unsigned int conn;
+    /* maximum number of files */
     unsigned int max_files;
+    /* maximum space occupied */
     size_t max_space;
+    /* maximum number of connections */
+    unsigned int max_conn;
 } server_state_t;
 
 /** The code for the result of a worker elaboration of a client request. */

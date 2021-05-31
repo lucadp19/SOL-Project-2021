@@ -103,6 +103,8 @@ int append_to_file(int worker_no, long fd_client){
             expell_multiple_LRU(size_to_remove, to_expell);
             file->can_be_expelled = true;
         }
+        if(curr_state.space > curr_state.max_space) 
+            curr_state.max_space = curr_state.space;
         safe_pthread_mutex_unlock(&curr_state_mtx);
         
         

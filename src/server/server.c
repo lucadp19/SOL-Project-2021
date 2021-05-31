@@ -102,6 +102,9 @@ int main(int argc, char* argv[]){
     // ------ CURRENT SERVER STATE ------ //
     curr_state.files = 0;
     curr_state.space = 0;
+    curr_state.max_files = 0;
+    curr_state.max_space = 0;
+    curr_state.max_conn = 0;
 
     // --------- REQUEST QUEUE --------- //
     if( (request_queue = empty_list()) == NULL){
@@ -204,6 +207,11 @@ int main(int argc, char* argv[]){
 
                 debug("New connection! File descriptor: %ld.\n", fd_client);
                 logger("[MAIN] [NEW_CONN] New client connected: file descriptor is %ld.\n", fd_client);
+                
+                // no need for mutex, only this thread deals with max_conn
+                curr_state.conn++;
+                if(curr_state.conn < curr_state.max_conn)
+                    curr_state.max_conn = curr_state.conn;
 
                 // adding client to master set
                 FD_SET(fd_client, &set);
@@ -487,6 +495,9 @@ static void close_client(long fd_client){
     // closing connection
     close(fd_client);
     logger("[MAIN] [CLOSE_CONN] Closed connection with client %ld.\n", fd_client);
+
+    // no need for mutex, only this thread deals with curr_state.conn/max_conn
+    curr_state.conn--;
 
     // closing files opened and/or locked by fd_client
     hash_iter_t* iter = safe_malloc(sizeof(hash_iter_t));
