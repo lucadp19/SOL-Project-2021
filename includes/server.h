@@ -31,6 +31,8 @@ typedef struct {
     size_t space;
     /* number of connections */
     unsigned int conn;
+    /* number of LRU file expulsions */
+    unsigned int no_LRU;
     /* maximum number of files */
     unsigned int max_files;
     /* maximum space occupied */

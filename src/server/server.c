@@ -20,14 +20,20 @@ pthread_cond_t request_queue_nonempty = PTHREAD_COND_INITIALIZER;
 hashmap_t* files = NULL;
 pthread_mutex_t files_mtx = PTHREAD_MUTEX_INITIALIZER;
 
+pthread_t sig_handler_tid = -1; 
+int* sig_handler_pipe = NULL;
+
+pthread_t* worker_tids = NULL;
+int** worker_pipes = NULL;
+
 /** 
  * pthread_yield for the given threads.
  */
-static int yield_all_threads(pthread_t sig_handler_tid, pthread_t worker_tids[]);
+static int yield_all_threads();
 /**
  * Closing all the open pipes.
  */
-static void close_all_pipes(int sig_handler_pipe[], int* worker_pipes[]);
+static void close_all_pipes();
 /**
  * Unlinks socket.
  */
@@ -68,8 +74,6 @@ int main(int argc, char* argv[]){
     long fd_max = -1;
 
     // ------- SIGNAL HANDLING ------- //
-    pthread_t sig_handler_tid;
-    int* sig_handler_pipe;
     if( (sig_handler_pipe = calloc(2, sizeof(int))) == NULL){
         perror("Signal handler pipe allocation failed");
         return -1;
@@ -116,9 +120,6 @@ int main(int argc, char* argv[]){
     logger("[MAIN] Initialized several data structures.\n");
 
     // ------ WORKER CREATION ------ //
-    pthread_t* worker_tids = NULL;
-    int** worker_pipes = NULL;
-    
     // allocating memory for worker thread ids
     worker_tids = (pthread_t*)safe_calloc(server_config.n_workers, sizeof(pthread_t));
     // setting them to -1
@@ -350,35 +351,25 @@ int main(int argc, char* argv[]){
         long fd_client = (long)iter->current_pos->data;
         close(fd_client);
     }
-    free(iter);
 
-    // printing all files in memory
-    #ifdef DEBUG
-    iter = NULL;
-    iter = safe_malloc(sizeof(hash_iter_t));
+    // printing summary of stats
+    printf("\t\033[0;32mPrinting summary of server statistics.\033[0m\n");
+    printf("    Maximum number of stored files:  %10u\n", curr_state.max_files);
+    printf("    Maximum space occupied in bytes: %10lu\n", curr_state.max_space);
+    printf("    Maximum number of connected clients: %6u\n", curr_state.max_conn);
+    printf("    Number of file expulsion by LRU: %10u\n", curr_state.no_LRU);
+    printf("    List of files stored at the end:\n");
+    // iteration on files
     if(hash_iter_init(iter) == -1){
         perror("Error in iterator initialization");
         return -1;
     }
-    while(true){
-        int err = hashmap_iter_get_next(iter, files);
-        
-        if(err == 1) // end of table
-            break;
-        
-        if(err == -1){ // actual error
-            perror("Error in hashtbl_iter_get_next");
-            return -1;
-        }
-
+    while( (err = hashmap_iter_get_next(iter, files)) == 0){
         file_t* file = (file_t*)iter->current_pos->data;
-        printf("> list: %ld\n", iter->current_list);
-        printf(">>> file path: %s\n", file->path_name);
-        printf(">>> file lock: %ld\n", file->fd_lock);
-        printf(">>> file last use: %ld\n", file->last_use);
+        if(file != NULL)
+        printf("\t%s\n", file->path_name);
     }
     free(iter);
-    #endif
 
     // freeing memory    
     hashtbl_free(&conn_client_table);

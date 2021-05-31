@@ -44,6 +44,7 @@ int expell_LRU(file_t** expelled_ptr){
     // no need for mutex, it has already been locked
     curr_state.files--;
     curr_state.space -= (*expelled_ptr)->size;
+    curr_state.no_LRU++;
     free(iter);
 
     logger("[REPLACEMENT] File \"%s\" was removed from the server by the replacement algorithm.\n", (*expelled_ptr)->path_name);
