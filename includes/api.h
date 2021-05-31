@@ -146,4 +146,12 @@ int closeFile(const char* pathname);
  */
 int removeFile(const char* pathname);
 
+/**
+ * Prints a string to stderr and appends a specific message
+ * based on the current errno value.
+ * If errno is not one of the errnos set by this API,
+ * it prints the usual perror message.
+ */ 
+void api_perror(const char* msg);
+
 #endif
