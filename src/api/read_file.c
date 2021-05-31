@@ -31,14 +31,14 @@ int readFile(const char* pathname, void** buf, size_t* size){
     // reading success/failure and file
     int l;
     int res;
-    if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0)
+    if( (l = readn(fd_sock, &res, sizeof(int))) == -1 || l == 0){
         errno = EBADE;
         return -1;
+    }
     if( res != SA_SUCCESS ){
         errno = convert_res_to_errno(res);
         return -1;
     }
-
     // can read file
     if( (l = readn(fd_sock, &(*size), sizeof(size_t))) == -1 || l == 0){
         errno = EBADE;

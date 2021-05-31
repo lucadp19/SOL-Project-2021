@@ -28,6 +28,7 @@ typedef enum {
 #define SA_NOT_LOCKED -20
 #define SA_NOT_EMPTY  -21
 #define SA_TOO_BIG    -22
+#define SA_NO_OPEN    -23
 
 
 

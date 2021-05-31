@@ -9,6 +9,7 @@
     } while(0)   
 
 static int rec_scan_dirs(const char* dirname, const char* exp_dir, int N);
+static void clean_node_buf(node_t* node);
 
 int execute_requests(){
     node_t* curr = request_q->head;
@@ -72,7 +73,7 @@ int execute_requests(){
                     if( openFile(file->key, O_CREATE | O_LOCK) == -1 ){
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
-                            perror("Open file in option -w");
+                            perror("Open file in option -W");
                             GO_TO_NEXT;
                             continue;
                         }
@@ -80,7 +81,7 @@ int execute_requests(){
                     if( writeFile(file->key, exp_dir) == -1 ) {
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
-                            perror("Write file in option -w");
+                            perror("Write file in option -W");
                             GO_TO_NEXT;
                             continue;
                         }
@@ -88,7 +89,7 @@ int execute_requests(){
                     if( closeFile(file->key) == -1 ) {
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
-                            perror("Close file in option -w");
+                            perror("Close file in option -W");
                              GO_TO_NEXT;
                             continue;
                         }
@@ -124,7 +125,8 @@ int execute_requests(){
                     if( openFile(file->key, O_NOFLAG) == -1 ){
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
-                            perror("Open file in option -w");
+                            perror("Open file in option -r");
+                            list_delete(&to_write, free_only_node);
                             GO_TO_NEXT;
                             continue;
                         }
@@ -134,17 +136,22 @@ int execute_requests(){
                     if( readFile(file->key, &(snb->buf), &(snb->size)) == -1 ) {
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
-                            perror("Write file in option -w");
+                            perror("Read file in option -r");
+                            list_delete(&to_write, free_only_node);
                             GO_TO_NEXT;
                             continue;
                         }
                     }
-                    list_push_back(to_write, file->key, snb);
+                    if( list_push_back(to_write, file->key, snb) == -1){
+                        fprintf(stderr, "Error in adding node to list. Aborting.\n");
+                        return -1;
+                    }
 
                     if( closeFile(file->key) == -1 ) {
                         if(errno == ENOTRECOVERABLE) return -1;
                         else {
-                            perror("Close file in option -w");
+                            perror("Close file in option -r");
+                            list_delete(&to_write, clean_node_buf);
                             GO_TO_NEXT;
                             continue;
                         }
@@ -157,6 +164,7 @@ int execute_requests(){
                     // I've written less files than I should have
                     if(err == -1){
                         perror("Error in writing files into directory");
+                        list_delete(&to_write, clean_node_buf);
                         GO_TO_NEXT;
                         continue;
                     } else {
@@ -164,11 +172,13 @@ int execute_requests(){
                             stderr, "Written %d files into %s instead of %d: %d writes failed.\n", 
                             err, exp_dir, to_write->nelem, err-to_write->nelem
                         );
+                        list_delete(&to_write, clean_node_buf);
                         GO_TO_NEXT;
                         continue;
                     }
                 }
 
+                list_delete(&to_write, clean_node_buf);
                 GO_TO_NEXT;
                 break;
             }
@@ -188,7 +198,7 @@ int execute_requests(){
                 if(N == 0) 
                     N = -1;
                 if( readNFiles(N, exp_dir) == -1){
-                    perror("Error in readNFiles");
+                    perror("Error in readNFiles (option -R)");
                     GO_TO_NEXT;
                     continue;
                 }
@@ -205,12 +215,12 @@ int execute_requests(){
 
                 while(file != NULL){
                     if( openFile(file->key, O_LOCK) == -1){
-                        perror("Error in openFile");
+                        perror("Open file in option -c");
                         file = file->next;
                         continue;
                     }
                     if( removeFile(file->key) == -1){
-                        perror("Error in removeFile");
+                        perror("Remove file in option -c");
                         file = file->next;
                         continue;
                     }
@@ -300,6 +310,7 @@ static int rec_scan_dirs(const char* dirname, const char* exp_dir, int N){
 
             n_reads++;
         }
+        free(new_path);
         errno = 0;
     } if( errno != 0 ){
         closedir(d);
@@ -308,4 +319,14 @@ static int rec_scan_dirs(const char* dirname, const char* exp_dir, int N){
 
     closedir(d);
     return n_reads;
+}
+
+static void clean_node_buf(node_t* node){
+    if(node == NULL) return;
+    if(node->data != NULL) {
+        size_n_buf_t* snb = (size_n_buf_t*)node->data;
+        if(snb->buf != NULL) free(snb->buf);
+        free(snb);
+    }
+    free(node);
 }

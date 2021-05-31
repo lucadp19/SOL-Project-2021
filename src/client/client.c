@@ -252,10 +252,13 @@ static void clean_req_node(node_t* node){
     }
     
     switch(node->key[0]){
-        case 'w':
-            free(node->data);
+        case 'w': {
+            str_long_pair_t* arg = (str_long_pair_t*)node->data;
+            free(arg->dir);
+            free(arg);
             free(node);
             break;
+        }
         case 't':
         case 'D':
         case 'R':      
@@ -267,7 +270,7 @@ static void clean_req_node(node_t* node){
         case 'l':
         case 'u':
         case 'c':
-            list_delete((list_t**)&(node->data), free_only_node);
+            list_delete((list_t**)&(node->data), free_node_and_key);
             free(node);
             break;
     }

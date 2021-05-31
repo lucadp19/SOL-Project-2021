@@ -1,6 +1,12 @@
 #include "client.h"
 
-static int comma_sep(list_t* list, char* arg);
+/** 
+ * Given an empty list and a string, separates the string into
+ * comma separated substrings and adds them all into list.
+ * If absolute == true, substring are path for files and the function will automatically
+ * convert them into absolute paths.
+ */
+static int comma_sep(list_t* list, char* arg, bool absolute);
 
 int parse_options(list_t* request_list, int argc, char* argv[]){
     int opt;
@@ -29,15 +35,24 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
             // -w sends a directory to server
             case 'w': {
                 char* directory;
+                char* abs_directory;
                 char* no_of_files_str;
                 char* save = NULL;
                 long files = 0;
 
+                // getting directory name
                 directory = strtok_r(optarg, ",", &save);
                 if(directory == NULL){
                     fprintf(stderr, "Error in parsing option -w: couldn't read directory name.\n");
                     return -1;
                 }
+
+                // converting it into absolute path
+                if( (abs_directory = realpath(directory, NULL)) == NULL){
+                    fprintf(stderr, "Error in parsing option -w: directory doesn't exist.\n");
+                    return -1;
+                }
+
                 no_of_files_str = strtok_r(NULL, ",", &save);
                 if(no_of_files_str != NULL && (sscanf(no_of_files_str, "%ld", &files) == EOF || files < 0)){
                     fprintf(stderr, "Error in parsing option -w: couldn't read number of files.\n");
@@ -46,7 +61,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
 
                 str_long_pair_t* arg;
                 arg = safe_malloc(sizeof(str_long_pair_t));
-                arg->dir = directory;
+                arg->dir = abs_directory;
                 arg->n_files = files;
 
                 if(list_push_back(request_list, "w", (void*)arg) == -1){
@@ -66,7 +81,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                     return -1;
                 }
 
-                if( comma_sep(files, optarg) == -1){
+                if( comma_sep(files, optarg, true) == -1){
                     fprintf(stderr, "Error in parsing option -W.\n");
                     return -1;
                 }
@@ -132,7 +147,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                     return -1;
                 }
 
-                if( comma_sep(files, optarg) == -1){
+                if( comma_sep(files, optarg, true) == -1){
                     fprintf(stderr, "Error in parsing option -r.\n");
                     return -1;
                 }
@@ -181,7 +196,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                     return -1;
                 }
 
-                if( comma_sep(files, optarg) == -1){
+                if( comma_sep(files, optarg, true) == -1){
                     fprintf(stderr, "Error in parsing option -l.\n");
                     return -1;
                 }
@@ -203,7 +218,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                     return -1;
                 }
 
-                if( comma_sep(files, optarg) == -1){
+                if( comma_sep(files, optarg, true) == -1){
                     fprintf(stderr, "Error in parsing option -u.\n");
                     return -1;
                 }
@@ -225,7 +240,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                     return -1;
                 }
 
-                if( comma_sep(files, optarg) == -1){
+                if( comma_sep(files, optarg, true) == -1){
                     fprintf(stderr, "Error in parsing option -c.\n");
                     return -1;
                 }
@@ -274,7 +289,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
     return 0;
 }
 
-static int comma_sep(list_t* list, char* arg){
+static int comma_sep(list_t* list, char* arg, bool absolute){
     if(list == NULL){
         errno = EINVAL;
         return -1;
@@ -282,9 +297,17 @@ static int comma_sep(list_t* list, char* arg){
 
     char* save;
     char* token = strtok_r(arg, ",", &save);
+    char* abs_token;
 
     while(token) {
-        if(list_push_back(list, token, NULL) == -1)
+
+        // converting token into absolute path if necessary
+        if(absolute){
+            if( (abs_token = realpath(token, NULL)) == NULL)
+                return -1;
+        } else abs_token = token;
+
+        if(list_push_back(list, abs_token, NULL) == -1)
             return -1;
         token = strtok_r(NULL, ",", &save);
     }

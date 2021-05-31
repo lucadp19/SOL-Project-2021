@@ -1,6 +1,6 @@
 # Compilation options
 CC 		= gcc
-CFLAGS 	+= -std=c99 -Wall -pedantic -g -I./includes -lpthread -lm -D_POSIX_C_SOURCE=200112L
+CFLAGS 	+= -std=c99 -Wall -pedantic -g -I./includes -lpthread -lm -D_POSIX_C_SOURCE=200112L -D_DEFAULT_SOURCE
 
 # Directories
 SRC_DIR		= ./src
