@@ -10,14 +10,15 @@
 - read_file: check client opened it
 - write_file: check client opened it
 - append_to_file: check client opened it and check the size
-- remove_file: check client opened it
+- remove_file: check client opened it and update current state
+- struct for max state (max files, max space occ, etc) 
+- print most important stats at the end
 
 ## Client
 - Clean up code and check errors from API
 
 ## API
 - Clean up API
-- Decide which errno should be set when writen/readn fails
 - Check if pathname/dirname/parameters are NULL
 - Create an api_perror function!
 
