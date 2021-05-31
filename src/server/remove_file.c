@@ -6,12 +6,14 @@ int remove_file(int worker_no, long fd_client){
     char* pathname = NULL;
     int pathname_len;
 
+    // reading pathname length
     if( (l = readn(fd_client, &pathname_len, sizeof(int))) == -1 ){
         return SA_ERROR;
     } if (l == 0) return SA_CLOSE;
 
     pathname = safe_calloc((pathname_len + 1), sizeof(char));
 
+    // reading pathname
     if( (l = readn(fd_client, (void*)pathname, pathname_len+1)) == -1){
         free(pathname);
         return SA_ERROR;
@@ -30,13 +32,28 @@ int remove_file(int worker_no, long fd_client){
     }
 
     file_writer_lock(to_remove);
+    
+    // client didn't open this file
+    if(!hashtbl_contains(to_remove->fd_open, fd_client)){ 
+        file_writer_unlock(to_remove);
+        safe_pthread_mutex_unlock(&files_mtx);
+        free(pathname);
+        return SA_NO_OPEN;
+    }
 
+    // file hasn't been locked by client
     if(to_remove->fd_lock != fd_client){
         file_writer_unlock(to_remove);
         safe_pthread_mutex_unlock(&files_mtx);
         free(pathname);
         return SA_NOT_LOCKED;
     }
+
+    // updating current server state
+    safe_pthread_mutex_lock(&curr_state_mtx);
+    curr_state.files--;
+    curr_state.space -= to_remove->size;
+    safe_pthread_mutex_unlock(&curr_state_mtx);
 
     hashmap_remove(files, pathname, NULL, (void**)&to_remove);
     file_delete(to_remove);

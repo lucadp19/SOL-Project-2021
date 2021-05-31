@@ -55,7 +55,7 @@ int open_file(int worker_no, long fd_client){
         }
         safe_pthread_mutex_unlock(&curr_state_mtx);
         file->can_be_expelled = true;
-        // TODO: what should I do with this file?! => delete it probably
+        // deleting this file because there's nowhere to send it
         file_delete(expelled);
 
         hashmap_insert(&files, pathname, file);
@@ -63,10 +63,11 @@ int open_file(int worker_no, long fd_client){
         safe_pthread_mutex_lock(&curr_state_mtx);
         curr_state.files++;
         safe_pthread_mutex_unlock(&curr_state_mtx);
-        file_writer_unlock(file);
 
-        debug("File added to fs!\n");
+        file_writer_unlock(file);
         safe_pthread_mutex_unlock(&files_mtx);
+        debug("File added to fs!\n");
+
         // logging info
         if( IS_FLAG_SET(flags, O_LOCK)) {
             logger(
@@ -103,7 +104,7 @@ int open_file(int worker_no, long fd_client){
     file_writer_lock(file);
 
     if(IS_FLAG_SET(flags, O_LOCK)){ // want to lock
-        if(file->fd_lock != -1){ // already locked
+        if(file->fd_lock != -1 && file->fd_lock != fd_client){ // already locked by other client
             file_writer_unlock(file);
             safe_pthread_mutex_unlock(&files_mtx);
 
@@ -114,7 +115,10 @@ int open_file(int worker_no, long fd_client){
             file->fd_lock = fd_client;
     }
     // adding client to clients who have opened this file
-    hashtbl_insert(&(file->fd_open), fd_client);
+    if(!hashtbl_contains(file->fd_open, fd_client))
+        hashtbl_insert(&(file->fd_open), fd_client);
+    // no error if client has already opened it
+
     // updating last use
     file->last_use = time(NULL);
 

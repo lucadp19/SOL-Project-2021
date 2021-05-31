@@ -8,10 +8,12 @@ int write_file(int worker_no, long fd_client){
     void* buf;
 
     // ------- READING DATA FROM CLIENT ------- //
+    // reading pathname length
     if( (l = readn(fd_client, &pathname_len, sizeof(int))) == -1){
         return SA_ERROR;
     } if( l == 0 ) return SA_CLOSE;
 
+    // reading pathname
     pathname = safe_calloc(pathname_len + 1, sizeof(char));
     if( (l = readn(fd_client, pathname, pathname_len + 1)) == -1) {
         free(pathname);
@@ -21,12 +23,14 @@ int write_file(int worker_no, long fd_client){
         return SA_CLOSE;
     }
 
+    // reading size of buffer
     if( (l = readn(fd_client, &size, sizeof(long))) == -1){
         free(pathname);
         return SA_ERROR;
     } if( l == 0 ) return SA_CLOSE;
 
     buf = safe_malloc(size);
+    // reading buffer
     if( (l = readn(fd_client, buf, size)) == -1) {
         free(pathname);
         free(buf);
@@ -44,7 +48,7 @@ int write_file(int worker_no, long fd_client){
 
     safe_pthread_mutex_lock(&files_mtx);
     // file doesn't exist
-    if(hashmap_get_by_key(files, pathname, (void**)&file) == -1 && errno == ENOENT){
+    if(hashmap_get_by_key(files, pathname, (void**)&file) == -1){
         safe_pthread_mutex_unlock(&files_mtx);
         free(pathname);
         free(buf);
@@ -97,7 +101,6 @@ int write_file(int worker_no, long fd_client){
     long size_to_remove = curr_state.space - server_config.max_space;
     if(size_to_remove > 0){
         file->can_be_expelled = false;
-        // maybe I should check the error
         expell_multiple_LRU(size_to_remove, to_expell);
         file->can_be_expelled = true;
     }

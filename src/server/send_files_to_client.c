@@ -3,7 +3,6 @@
 int send_single_file(int worker_no, long fd_client, file_t* file, bool send_path){
     if(file == NULL) return -1;
 
-
     if(send_path) { // send pathname only if send_path == true
         int path_len = strlen(file->path_name);
         if( writen(fd_client, &path_len, sizeof(int)) == -1)
@@ -13,7 +12,7 @@ int send_single_file(int worker_no, long fd_client, file_t* file, bool send_path
     }
     if( writen(fd_client, &file->size, sizeof(size_t)) == -1)
         return -1;
-    if( file->size != 0 && writen(fd_client, file->contents, file->size) == -1)
+    if( file->size != 0 && writen(fd_client, file->contents, file->size) == -1) // if file->size == 0 there's no content to send
         return -1;
     
     logger("[WRITE_TO_CLIENT] Written file \"%s\" to client with fd %ld.\n", file->path_name, fd_client);

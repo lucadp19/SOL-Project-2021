@@ -16,7 +16,6 @@ int read_n_files(int worker_no, long fd_client){
 
     list_t* file_list;
     if( (file_list = empty_list()) == NULL){
-        // TODO: ?
         return SA_ERROR;
     }
     hash_iter_t* iter = safe_malloc(sizeof(hash_iter_t));
@@ -44,17 +43,17 @@ int read_n_files(int worker_no, long fd_client){
             
             safe_pthread_mutex_unlock(&files_mtx);
             list_delete(&file_list, free_only_node);
-            // TODO ?
             return SA_ERROR;
         }
         N--;
-    } if( err == -1 ) {
+    } if( err == -1 ) { // cannot happen: both iter and files are != NULL
         reader_unlock_all(file_list);
             
         safe_pthread_mutex_unlock(&files_mtx);
         list_delete(&file_list, free_only_node);
         return SA_ERROR;
     }
+
     free(iter);
     // unlocking general mutex
     safe_pthread_mutex_unlock(&files_mtx);

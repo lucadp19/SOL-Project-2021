@@ -67,7 +67,7 @@ int install_sig_handler(int* pipe, pthread_t* sig_handler_tid){
     memset(&sig_act, 0, sizeof(sig_act));
     sig_act.sa_handler = SIG_IGN;
     if( (sigaction(SIGPIPE, &sig_act, NULL) == -1)){
-        // perror("Error while trying to ignore SIGPIPE");
+        perror("Error while trying to ignore SIGPIPE");
         return -1;
     }
 

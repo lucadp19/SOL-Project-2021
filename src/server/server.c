@@ -37,7 +37,13 @@ static void unlink_socket();
  * If no descriptor is set returns -1.
  */
 static inline int update_max(fd_set set, int fd_max);
-
+/** 
+ * Given a file descriptor representing a client
+ * closes the connection to client.
+ * If this client had some files opened or/and locked,
+ * those files are unlocked and client is removed from
+ * the list of "openers".
+ */
 static void close_client(long fd_client);
 
 int main(int argc, char* argv[]){ 
@@ -56,7 +62,7 @@ int main(int argc, char* argv[]){
     // ----------- LOG FILE ----------- //
     if( init_log_file() == -1 )
         return -1;
-    logger("Read config file and started server.\n");
+    logger("[MAIN] Read config file and started server.\n");
 
     // ----- MAX FILE DESCRIPTOR ----- //
     long fd_max = -1;
@@ -100,20 +106,18 @@ int main(int argc, char* argv[]){
     // --------- REQUEST QUEUE --------- //
     if( (request_queue = empty_list()) == NULL){
         perror("Error while creating new list");
+        fprintf(stderr, "Aborting server.\n");
         return -1;
     }
 
-    logger("Initialized several data structures.\n");
+    logger("[MAIN] Initialized several data structures.\n");
 
     // ------ WORKER CREATION ------ //
     pthread_t* worker_tids = NULL;
     int** worker_pipes = NULL;
     
     // allocating memory for worker thread ids
-    if( (worker_tids = (pthread_t*)calloc(server_config.n_workers, sizeof(pthread_t))) == NULL){
-        perror("Error in calloc for worker threads ids");
-        return -1;
-    }
+    worker_tids = (pthread_t*)safe_calloc(server_config.n_workers, sizeof(pthread_t));
     // setting them to -1
     for(int i = 0; i < server_config.n_workers; i++) worker_tids[i] = -1;
 
@@ -132,7 +136,7 @@ int main(int argc, char* argv[]){
         if(worker_pipes[i][R_ENDP] > fd_max) fd_max = worker_pipes[i][R_ENDP];
     }
 
-    logger("Installing worker threads.\n");
+    logger("[MAIN] Installing worker threads.\n");
     if( install_workers(worker_tids, worker_pipes) == -1){
         perror("Error in creating workers");
         return -1;
@@ -243,21 +247,24 @@ int main(int argc, char* argv[]){
                     case MW_NON_FATAL_ERROR: 
                         debug("There has been a non-fatal error.\n");
                     case MW_SUCCESS: // success :)
+                        // adding fd_client back to listening set
                         FD_SET(result.fd_client, &set);
                         if(result.fd_client > fd_max) fd_max = result.fd_client;
                         break;
 
                     case MW_CLOSE: // closing connection
-                        debug("Closed connection with client %ld!\n", result.fd_client);
+                        // removing client from hashtable
                         if( hashtbl_remove(conn_client_table, result.fd_client) == -1){
                             perror("Error while removing file descriptor from hashtable");
                             return -1;
                         }
+                        debug("Closed connection with client %ld!\n", result.fd_client);
                         close_client(result.fd_client);
                         break;
 
                     case MW_FATAL_ERROR:
                         debug("Fatal error in connection with client %ld. Closing connection.\n", result.fd_client);
+                        // removing client from hashtable
                         if( hashtbl_remove(conn_client_table, result.fd_client) == -1){
                             perror("Error while removing file descriptor from hashtable");
                             return -1;
@@ -284,6 +291,7 @@ int main(int argc, char* argv[]){
             safe_pthread_mutex_lock(&request_queue_mtx);
             if( list_push_back(request_queue, NULL, (void*)fd_client) == -1){
                 perror("Error while inserting new element in queue");
+                fprintf(stderr, "Aborting server.\n");
                 return -1;
             }
             safe_pthread_cond_signal(&request_queue_nonempty);
@@ -329,17 +337,8 @@ int main(int argc, char* argv[]){
         perror("Error in iterator initialization");
         return -1;
     }
-    while(true){
-        int err = hashtbl_iter_get_next(iter, conn_client_table);
-        
-        if(err == 1) // end of table
-            break;
-        
-        if(err == -1){ // actual error
-            perror("Error in hashtbl_iter_get_next");
-            return -1;
-        }
-
+    int err;
+    while( (err = hashtbl_iter_get_next(iter, conn_client_table)) == 0){
         long fd_client = (long)iter->current_pos->data;
         close(fd_client);
     }
@@ -498,14 +497,14 @@ static void close_client(long fd_client){
     while( (err = hashmap_iter_get_next(iter, files)) == 0){
         file_t* curr_file = (file_t*)iter->current_pos->data;
 
+        // locking file in writing mode
         file_writer_lock(curr_file);
         if(curr_file->fd_lock == fd_client) 
             curr_file->fd_lock = -1;
         hashtbl_remove(curr_file->fd_open, fd_client);
         file_writer_unlock(curr_file);
-    } if( err == -1 ){ // cannot happen as both files and iter are != NULL
-        return; // ? TODO: think
-    }
+    } // err cannot be -1 as both iter and files are != NULL
+
     free(iter);
     safe_pthread_mutex_unlock(&files_mtx);
 }

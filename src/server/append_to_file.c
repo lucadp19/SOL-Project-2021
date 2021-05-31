@@ -61,6 +61,27 @@ int append_to_file(int worker_no, long fd_client){
     // locking file
     file_writer_lock(file);
 
+    // checking that client has previously opened the file
+    if(!hashtbl_contains(file->fd_open, fd_client)){
+        file_writer_unlock(file);
+        safe_pthread_mutex_unlock(&files_mtx);
+        list_delete(&to_expell, files_node_cleaner);
+        free(pathname);
+        free(buf);
+        return SA_NO_OPEN;
+    }
+
+    // checking that buf can be appended to file without going over space requirements
+    if(file->size + size > server_config.max_space){
+        file_writer_unlock(file);
+        safe_pthread_mutex_unlock(&files_mtx);
+        list_delete(&to_expell, files_node_cleaner);
+        free(pathname);
+        free(buf);
+        return SA_TOO_BIG;
+    } 
+
+
     // updating file contents
     file->contents = safe_realloc(file->contents, file->size + size);
     memcpy((unsigned char*)(file->contents) + file->size, buf, size);

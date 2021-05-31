@@ -26,8 +26,8 @@ for(int i = 0; i < server_config.n_workers; i++){
 
 void* worker_thread(void* arg){
     if(arg == NULL){
-        // returns 22l -> code for EINVAL
-        return (void*)22l;
+        fprintf(stderr, "Null argument to worker thread: aborting server.\n");
+        exit(EXIT_FAILURE);
     }
 
     worker_arg_t* w_arg = (worker_arg_t*)arg;
@@ -58,7 +58,6 @@ void* worker_thread(void* arg){
         memset(&result, 0, sizeof(worker_res_t));
         result.fd_client = fd_client;
 
-        // TODO: actual worker code
         debug("> THREAD: got request from fd %ld.\n", fd_client);
         logger("[THREAD %d] [NEW_REQ] Accepted request from client %ld.\n", worker_no, fd_client);
 
@@ -69,8 +68,9 @@ void* worker_thread(void* arg){
             result.code = MW_FATAL_ERROR;
             logger("[THREAD %d] [FATALERROR] Fatal error in reading client request.\n");
             if( writen(pipe[W_ENDP], &result, sizeof(worker_res_t)) == -1){
-                perror("Error writen");
-                return (void*)-1l; // TODO: same thing :(
+                perror("Error write to main thread");
+                fprintf(stderr, "Aborting server.\n");
+                exit(EXIT_FAILURE);
             }
             continue;
         }
@@ -79,8 +79,9 @@ void* worker_thread(void* arg){
             result.code = MW_CLOSE;
             logger("[THREAD %d] [CLOSE_CONN] Closing connection with client %ld.\n", worker_no, fd_client);
             if( writen(pipe[W_ENDP], &result, sizeof(worker_res_t)) == -1){
-                perror("Error writen");
-                return (void*)-1l; // TODO: same thing :(
+                perror("Error write to main thread");
+                fprintf(stderr, "Aborting server.\n");
+                exit(EXIT_FAILURE);
             }
             continue;
         }
@@ -280,8 +281,9 @@ void* worker_thread(void* arg){
         }
 
         if( writen(pipe[W_ENDP], &result, sizeof(worker_res_t)) == -1){
-            perror("Error writen");
-            return (void*)-1l; // TODO: same thing :(
+            perror("Error write to main thread");
+            fprintf(stderr, "Aborting server.\n");
+            exit(EXIT_FAILURE);
         }
         debug("> Job finished!\n");
     }

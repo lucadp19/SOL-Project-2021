@@ -33,7 +33,7 @@ int expell_LRU(file_t** expelled_ptr){
         debug("\t[LRU] least: %lu, current: %lu, curr-name: %s\n",
             least_time, curr_file->last_use, curr_file->path_name);
 
-    } if( err == -1 )
+    } if( err == -1 ) // won't happen: both iter and files are != NULL
         return -1;
 
     // least_file is != NULL
@@ -47,7 +47,7 @@ int expell_LRU(file_t** expelled_ptr){
     free(iter);
 
     logger("[REPLACEMENT] File \"%s\" was removed from the server by the replacement algorithm.\n", (*expelled_ptr)->path_name);
-    logger("[REPLACEMENT] %lu bytes freed.\n", (*expelled_ptr)->path_name);
+    logger("[REPLACEMENT][BF] %lu bytes freed.\n", (*expelled_ptr)->path_name);
     return 0;
 }
 
@@ -66,8 +66,9 @@ int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list){
             break;
 
         if( list_push_back(expelled_list, NULL, expelled) == -1){
-            // no more memory
-            // TODO
+            perror("Error in adding element to list");
+            fprintf(stderr, "Aborting server.\n");
+            exit(EXIT_FAILURE);
         }
         freed = freed + expelled->size;
     }

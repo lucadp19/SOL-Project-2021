@@ -30,12 +30,18 @@ int read_file(int worker_no, long fd_client){
     // locking file (in reader mode)
     file_reader_lock(to_send);
 
+    if(!hashtbl_contains(to_send->fd_open, fd_client)){ // client didn't open this file
+        file_reader_unlock(to_send);
+        safe_pthread_mutex_unlock(&files_mtx);
+        free(pathname);
+        return SA_NO_OPEN;
+    }
+
     // updating time of last use
     to_send->last_use = time(NULL);
 
     // unlocking general mutex (we don't need it anymore)
     safe_pthread_mutex_unlock(&files_mtx);
-
 
     // notify client of success (until now)
     int current_res = SA_SUCCESS;
