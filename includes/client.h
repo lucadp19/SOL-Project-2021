@@ -17,6 +17,7 @@ typedef struct {
     char* socket;
     bool print_to_stdout;
     long waiting_sec;
+    bool print_helper;
 } client_conf_t;
 
 // ----------- GLOBALS ----------- //
@@ -28,23 +29,6 @@ extern client_conf_t config;
  * List of requests.
  */
 extern list_t* request_q;
-
-/**
- * True iff -h option was set.
- */
-extern bool h_option;
-/**
- * True iff -p option was set.
- */
-extern bool p_option;
-/**
- * True iff -f option was set.
- */
-extern bool f_option;
-/**
- * True iff -a option was set.
- */
-extern bool a_option;
 
 // ---------- CONSTANTS ---------- //
 /**
@@ -74,6 +58,6 @@ void validate_options();
 /** 
  * Executes the parsed request list.
  */
-int execute_requests();
+void execute_requests();
 
 #endif

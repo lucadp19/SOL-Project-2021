@@ -1,10 +1,20 @@
 #include "client.h"
 
+bool h_option = false;
+bool f_option = false;
+bool p_option = false;
+bool a_option = false;
+
 /** 
  * Given an empty list and a string, separates the string into
  * comma separated substrings and adds them all into list.
  * If absolute == true, substring are path for files and the function will automatically
  * convert them into absolute paths.
+ * 
+ * If it cannot convert a path into an absolute one, or it cannot add nodes to the given list,
+ * this function shall print an error message and abort the process.
+ * 
+ * Returns 0 on success, -1 if the given list is NULL (sets errno to EINVAL).
  */
 static int comma_sep(list_t* list, char* arg, bool absolute);
 
@@ -66,7 +76,8 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
 
                 if(list_push_back(request_list, "w", (void*)arg) == -1){
                     perror("Error in adding element to list");
-                    return -1;
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
                 break;
             }
@@ -76,19 +87,17 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 list_t* files;
 
                 if( (files = empty_list()) == NULL){
-                    perror("Malloc error");
-                    fprintf(stderr, "Error in parsing option -W.\n");
-                    return -1;
+                    perror("Error in creating list");
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
 
-                if( comma_sep(files, optarg, true) == -1){
-                    fprintf(stderr, "Error in parsing option -W.\n");
-                    return -1;
-                }
+                comma_sep(files, optarg, true);
 
                 if( list_push_back(request_list, "W", (void*)files) == -1){
                     perror("Error in adding element to list");
-                    return -1;
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
                 break;
             }
@@ -110,8 +119,8 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
 
                 if(list_push_back(request_list, "t", (void*)time) != 0){
                     perror("Error in adding element to list");
-                    fprintf(stderr, "Error in parsing option -t.\n");
-                    return -1;
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
                 break;
             }
@@ -131,8 +140,8 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
             case 'D': {
                 if(list_push_back(request_list, "D", (void*)optarg) == -1){
                     perror("Error in adding element to list");
-                    fprintf(stderr, "Error in parsing option -D.\n");
-                    return -1;
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
                 break;
             }
@@ -142,19 +151,17 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 list_t* files;
 
                 if( (files = empty_list()) == NULL){
-                    perror("Malloc error");
-                    fprintf(stderr, "Error in parsing option -r.\n");
-                    return -1;
+                    perror("Error in creating list");
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
 
-                if( comma_sep(files, optarg, true) == -1){
-                    fprintf(stderr, "Error in parsing option -r.\n");
-                    return -1;
-                }
+                comma_sep(files, optarg, true);
 
                 if( list_push_back(request_list, "r", (void*)files) == -1){
                     perror("Error in adding element to list");
-                    return -1;
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
                 break;                
             }
@@ -171,8 +178,8 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 }
                 if(list_push_back(request_list, "R", (void*)n) == -1){
                     perror("Error in adding element to list");
-                    fprintf(stderr, "Error in parsing option -R.\n");
-                    return -1;
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
                 break;
             }
@@ -191,19 +198,17 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 list_t* files;
 
                 if( (files = empty_list()) == NULL){
-                    perror("Malloc error");
-                    fprintf(stderr, "Error in parsing option -l.\n");
-                    return -1;
+                    perror("Error in creating list");
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
 
-                if( comma_sep(files, optarg, true) == -1){
-                    fprintf(stderr, "Error in parsing option -l.\n");
-                    return -1;
-                }
+                comma_sep(files, optarg, true);
 
                 if( list_push_back(request_list, "l", (void*)files) == -1){
                     perror("Error in adding element to list");
-                    return -1;
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
                 break;    
             }
@@ -213,19 +218,17 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 list_t* files;
 
                 if( (files = empty_list()) == NULL){
-                    perror("Malloc error");
-                    fprintf(stderr, "Error in parsing option -u.\n");
-                    return -1;
+                    perror("Error in creating list");
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
 
-                if( comma_sep(files, optarg, true) == -1){
-                    fprintf(stderr, "Error in parsing option -u.\n");
-                    return -1;
-                }
+                comma_sep(files, optarg, true);
 
                 if( list_push_back(request_list, "u", (void*)files) == -1){
                     perror("Error in adding element to list");
-                    return -1;
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
                 break;    
             }
@@ -235,19 +238,17 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
                 list_t* files;
 
                 if( (files = empty_list()) == NULL){
-                    perror("Malloc error");
-                    fprintf(stderr, "Error in parsing option -c.\n");
-                    return -1;
+                    perror("Error in creating list");
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
 
-                if( comma_sep(files, optarg, true) == -1){
-                    fprintf(stderr, "Error in parsing option -c.\n");
-                    return -1;
-                }
+                comma_sep(files, optarg, true);
 
                 if( list_push_back(request_list, "c", (void*)files) == -1){
                     perror("Error in adding element to list");
-                    return -1;
+                    fprintf(stderr, "Aborting.\n");
+                    exit(EXIT_FAILURE);
                 }
                 break;    
             } 
@@ -303,14 +304,20 @@ static int comma_sep(list_t* list, char* arg, bool absolute){
 
         // converting token into absolute path if necessary
         if(absolute){
-            if( (abs_token = realpath(token, NULL)) == NULL)
-                return -1;
+            if( (abs_token = realpath(token, NULL)) == NULL){
+                perror("Error in converting relative path into an absolute one");
+                exit(EXIT_FAILURE);
+            }
         } else abs_token = token;
 
-        if(list_push_back(list, abs_token, NULL) == -1)
-            return -1;
+        if(list_push_back(list, abs_token, NULL) == -1){
+            perror("Error in adding element to list");
+            fprintf(stderr, "Aborting.\n");
+            exit(EXIT_FAILURE);
+        }
         token = strtok_r(NULL, ",", &save);
     }
+
     return 0;
 }
 
