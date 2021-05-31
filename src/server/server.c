@@ -211,7 +211,7 @@ int main(int argc, char* argv[]){
                 
                 // no need for mutex, only this thread deals with max_conn
                 curr_state.conn++;
-                if(curr_state.conn < curr_state.max_conn)
+                if(curr_state.conn > curr_state.max_conn)
                     curr_state.max_conn = curr_state.conn;
 
                 // adding client to master set
@@ -354,10 +354,10 @@ int main(int argc, char* argv[]){
 
     // printing summary of stats
     printf("\t\033[0;32mPrinting summary of server statistics.\033[0m\n");
-    printf("    Maximum number of stored files:  %10u\n", curr_state.max_files);
-    printf("    Maximum space occupied in bytes: %10lu\n", curr_state.max_space);
-    printf("    Maximum number of connected clients: %6u\n", curr_state.max_conn);
-    printf("    Number of file expulsion by LRU: %10u\n", curr_state.no_LRU);
+    printf("    Maximum number of stored files:  %15u\n", curr_state.max_files);
+    printf("    Maximum space occupied in bytes: %15lu\n", curr_state.max_space);
+    printf("    Maximum number of connected clients: %11u\n", curr_state.max_conn);
+    printf("    Number of file expulsion by LRU: %15u\n", curr_state.no_LRU);
     printf("    List of files stored at the end:\n");
     // iteration on files
     if(hash_iter_init(iter) == -1){
