@@ -12,7 +12,8 @@ typedef struct {
 
 /** Taken a path to a file (absolute or relative),
  * strips away everything but the basename and returns it.
- * If there are no slashes ('/') in pathname, returns pathname.
+ * I
+                     f there are no slashes ('/') in pathname, returns pathname.
  */
 const char* remove_path_from_name(const char* pathname);
 
@@ -36,13 +37,12 @@ int write_list_of_files_into_dir(list_t* files, const char* dir);
 /** Given a node containing a size_n_buf, frees the buffer and the node. */
 void free_node_size_n_buf(node_t* node);
 
-/** 
- * Given a relative path to a file returns the absolute path.
- * Returns
- *  - 0 on success,
- *  - 1 whenever the file doesn't exist (and abs_path is set to point to rel_path)
- *  - -1 on error and sets errno.
+/**
+ * Given a pathname returns in size the size of the file with the given name.
+ * Returns 0 on success, -1 on error.
  */
-int get_realpath(const char* rel_path, char* abs_path);
+int get_file_size(const char* pathname, off_t* size);
+
+
 
 #endif

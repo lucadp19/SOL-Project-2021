@@ -113,3 +113,15 @@ int mkdir_p(const char *path) {
 
     return 0;
 }
+
+int get_file_size(const char* pathname, off_t* size){
+    struct stat st;
+
+    if(stat(pathname, &st) == 0){
+        *size = st.st_size;
+        return 0;
+    } else {
+        *size = 0;
+        return -1;
+    }
+}
