@@ -34,9 +34,10 @@ int readNFiles(int N, const char* dirname){
     }
 
     // can read files
-    if( write_files_sent_by_server(dirname) == -1){
+    int n_files;
+    if( (n_files = write_files_sent_by_server(dirname)) == -1){
         return -1;
     }
 
-    return 0;
+    return n_files;
 }
