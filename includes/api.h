@@ -19,6 +19,7 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
  * Takes a socket name and closes the connection.
  * Returns 0 on success and -1 on error, setting errno.
  * Possible errors are:
+ *  - sockname is NULL, errno = [EINVAL];
  *  - wrong socket name, or not connected to any socket, errno = [ENOTCONN].
  */
 int closeConnection(const char* sockname);
@@ -28,7 +29,8 @@ int closeConnection(const char* sockname);
  * with the given flags.
  * Returns 0 on success and -1 on error, setting errno.
  * Possible errors are:
- *  - client is not connected to server, errno = [ENOTCONN]
+ *  - client is not connected to server, errno = [ENOTCONN];
+ *  - pathname is NULL, errno = [EINVAL];
  *  - trying to create an already existing file, errno = [EEXIST];
  *  - trying to open (without O_CREAT) a file that doesn't exist, errno = [ENOENT];
  *  - trying to open-lock a file that is already locked, errno = [EBUSY];
@@ -44,6 +46,7 @@ int openFile(const char* pathname, int flags);
  * Returns 0 on success and -1 on error, setting errno.
  * Possible errors are:
  *  - client is not connected to server, errno = [ENOTCONN];
+ *  - pathname, buf, or size are NULL, errno = [EINVAL];
  *  - trying to read a file that doesn't exist, errno = [ENOENT];
  *  - trying to read a non opened file, errno = [ENOKEY];
  *  - fatal server or API error, errno = [ENOTRECOVERABLE];
@@ -75,7 +78,8 @@ int readNFiles(int N, const char* dirname);
  * Returns 0 on success, -1 on error and sets errno.
  * Possible errors are:
  *  - client is not connected to server, errno = [ENOTCONN];
- *  - client last request was not a successful open-lock-create on pathname, errno = [EINVAL];
+ *  - pathname is NULL, errno = [EINVAL];
+ *  - client last request was not a successful open-lock-create on pathname, errno = [ENOTTY];
  *  - pathname is not the path of a file on server, errno = [ENOENT];
  *  - client did not open pathname, errno = [ENOKEY];
  *  - client did not lock pathname, errno = [EPERM];
@@ -97,6 +101,7 @@ int writeFile(const char* pathname, const char* dirname);
  * Returns 0 on success, -1 on error and sets errno.
  * Possible errors are:
  *  - client is not connected to server, errno = [ENOTCONN];
+ *  - pathname or buf are NULL, errno = [EINVAL];
  *  - pathname is not the path of a file on server, errno = [ENOENT];
  *  - client did not open pathname, errno = [ENOKEY];
  *  - the contents of the buffer are too big to fit into server, errno = [EFBIG];
@@ -126,6 +131,7 @@ int unlockFile(const char* pathname);
  * On error returns -1 and sets errno.
  * Possible errors are:
  *  - client is not connected to server, errno = [ENOTCONN];
+ *  - pathname is NULL, errno = [EINVAL];
  *  - pathname is not the path of a file on server, errno = [ENOENT];
  *  - fatal server or API error, errno = [ENOTRECOVERABLE];
  *  - fatal error in communication, errno = [EBADE].
@@ -138,6 +144,7 @@ int closeFile(const char* pathname);
  * On success returns 0, on error -1 and sets errno.
  * Possible errors are:
  *  - client is not connected to server, errno = [ENOTCONN];
+ *  - pathname is NULL, errno = [EINVAL];
  *  - pathname is not the path of a file on server, errno = [ENOENT];
  *  - pathname was not opened by client, errno = [ENOKEY];
  *  - pathname was not locked by client, errno = [EPERM];

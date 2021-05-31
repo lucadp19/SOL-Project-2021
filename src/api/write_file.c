@@ -16,8 +16,8 @@ int writeFile(const char* pathname, const char* dirname){
 
     int len = strlen(pathname);
     if(!last_op.is_open || !last_op.create || !last_op.lock || !last_op.success || strncmp(last_op.path, pathname, len) ){
-        // invalid request!
-        errno = EINVAL;
+        // last op was not a successful open-create-lock
+        errno = ENOTTY;
         return -1;
     }
 

@@ -18,7 +18,7 @@ static const char* errno_to_msg(int err){
             return "could not create directory";
         case ECANCELED:
             return "could not write every file into directory";
-        case EINVAL:
+        case ENOTTY:
             return "cannot write into file: last operation was not a locking-creation";
         case ENOSYS:
             return "operation is not implemented yet";
