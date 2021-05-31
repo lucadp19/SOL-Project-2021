@@ -58,6 +58,14 @@ int write_file(int worker_no, long fd_client){
     // locking file
     file_writer_lock(file);
 
+    // client hasn't openeid file
+    if(!hashtbl_contains(file->fd_open, fd_client)){
+        file_writer_unlock(file);
+        safe_pthread_mutex_unlock(&files_mtx);
+        free(pathname);
+        free(buf);
+        return SA_NO_OPEN;
+    }
     // file isn't locked
     if(file->fd_lock != fd_client){
         file_writer_unlock(file);

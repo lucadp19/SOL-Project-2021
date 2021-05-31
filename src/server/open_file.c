@@ -168,6 +168,7 @@ static int create_file(file_t** file, char* pathname, long flags, long fd_client
     else (*file)->fd_lock = -1;
 
     // initializing list of openers
+    // TODO: check errors
     hashtbl_init(&((*file)->fd_open), 4, default_hashtbl_hash);
     hashtbl_insert(&((*file)->fd_open), fd_client);
 
