@@ -1,5 +1,7 @@
 #include "api.h"
 
+static const char* errno_to_msg(int err);
+
 void api_perror(const char* str){
     fprintf(stderr, "%s: %s.", str, errno_to_msg(errno));
 }
