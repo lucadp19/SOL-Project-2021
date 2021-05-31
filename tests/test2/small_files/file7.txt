@@ -1,0 +1,38 @@
+
+* Using History Interactively:: Command History Expansion on shell behavior.
+
+************* File: bash.info, Node: Top, Next: Introduction, Prev: (dir), Up: (dir)
+features that only appear in Bash. Some of the shells that Bash has * Bash Features::
+Features found only in Bash.  This is Edition 5.1, last updated 29 October 2020,
+of 'The GNU Bash * Basic Shell Features::	 The shell "building blocks".  *
+Job Control::		      What job control is and how Bash allows you features
+were inspired by other shells and which are specific to Bash.  * Shell Variables::
+Variables used or set by Bash.	* Major Differences From The Bourne Shell::	A
+terse list of the differences * Command Line Editing::	      Chapter describing the
+command line * Indexes::		     Various indexes for this manual.  * Menu:
+('ksh'), and the C-shell ('csh' and its successor, 'tcsh'). The * Introduction::
+An introduction to the shell.
+				editing features.
+
+				manual.
+
+Bash. The Bash manual page should be used as the definitive reference
+
+Bash shell (version 5.1, 29 October 2020). The Bash home page is * Definitions::
+Some definitions used in the rest of this
+						between Bash and historical
+borrowed concepts from are the Bourne Shell ('sh'), the Korn Shell * Shell Builtin
+Commands::	Commands that are a part of the shell.	* GNU Free Documentation
+License::      Copying and sharing this documentation.
+						versions of /bin/sh.
+Bash Features Bash contains features that appear in other popular shells, and some
+This text is a brief description of the features that are present in the
+
+				to use it.
+Reference Manual', for 'Bash', Version 5.1.
+
+<http://www.gnu.org/software/bash/>.  * Reporting Bugs::	      How to report
+bugs in Bash.  following menu breaks the features up into categories, noting which
+
+This manual is meant as a brief introduction to features found in * Installing Bash::
+How to build and install Bash on your system.

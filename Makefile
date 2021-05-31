@@ -121,7 +121,7 @@ $(BIN_DIR)/list_test: $(TEST_DIR)/list_test.c $(LIB_DIR)/libutil.so
 
 # ---------------- Official Tests ----------------	#
 .PHONY : test1 test2
-.PHONY : clean_test1
+.PHONY : clean_test1 clean_test2
 
 test1:
 	$(SCRIPT_DIR)/test1.sh
@@ -134,4 +134,10 @@ clean_test1:
 	@echo "Cleaning complete!"
 
 test2:
-	@echo "Test2 has not been written yet :("
+	$(SCRIPT_DIR)/test2.sh
+	
+clean_test2:
+	@echo "Cleaning files created by test2..."
+	@rm -rf $(TEST_DIR)/test2/deleted_1
+	@rm -rf $(TEST_DIR)/test2/deleted_2
+	@echo "Cleaning complete!"

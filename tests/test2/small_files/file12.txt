@@ -1,0 +1,39 @@
+* Bash Features::		Features found only in Bash.  ('ksh'), and the C-shell
+('csh' and its successor, 'tcsh'). The
+						between Bash and historical
+Bash contains features that appear in other popular shells, and some
+
+This is Edition 5.1, last updated 29 October 2020, of 'The GNU Bash * Using History
+Interactively:: Command History Expansion
+				to use it.
+features were inspired by other shells and which are specific to Bash.	This text
+is a brief description of the features that are present in the on shell behavior.
+* Installing Bash::		How to build and install Bash on your system.
+borrowed concepts from are the Bourne Shell ('sh'), the Korn Shell
+
+
+<http://www.gnu.org/software/bash/>.  * Job Control::		      What job control is
+and how Bash allows you This manual is meant as a brief introduction to features found in
+
+
+Reference Manual', for 'Bash', Version 5.1.
+
+* Introduction::		An introduction to the shell.  * Shell Variables::
+Variables used or set by Bash.	Bash. The Bash manual page should be used as the
+definitive reference * Definitions::		     Some definitions used in the rest
+of this
+
+Bash shell (version 5.1, 29 October 2020). The Bash home page is * GNU Free Documentation
+License::      Copying and sharing this documentation.	features that only appear
+in Bash. Some of the shells that Bash has ************* * Shell Builtin Commands::
+Commands that are a part of the shell.
+						versions of /bin/sh.
+File: bash.info, Node: Top, Next: Introduction, Prev: (dir), Up: (dir)
+				editing features.
+Bash Features * Major Differences From The Bourne Shell::     A terse list of the
+differences * Reporting Bugs::		    How to report bugs in Bash.  * Menu:
+				manual.
+
+* Basic Shell Features::	The shell "building blocks".  * Command Line Editing::
+Chapter describing the command line * Indexes::			    Various indexes
+for this manual.  following menu breaks the features up into categories, noting which

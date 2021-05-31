@@ -152,6 +152,6 @@ int removeFile(const char* pathname);
  * If errno is not one of the errnos set by this API,
  * it prints the usual perror message.
  */ 
-void API_perror(const char* msg);
+void api_perror(const char* msg);
 
 #endif

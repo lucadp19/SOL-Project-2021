@@ -47,7 +47,7 @@ int expell_LRU(file_t** expelled_ptr){
     free(iter);
 
     logger("[REPLACEMENT] File \"%s\" was removed from the server by the replacement algorithm.\n", (*expelled_ptr)->path_name);
-    logger("[REPLACEMENT][BF] %lu bytes freed.\n", (*expelled_ptr)->path_name);
+    logger("[REPLACEMENT][BF] %lu bytes freed.\n", (*expelled_ptr)->size);
     return 0;
 }
 
