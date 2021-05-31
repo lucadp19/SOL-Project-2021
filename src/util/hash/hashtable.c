@@ -88,6 +88,20 @@ int hashtbl_insert(hashtbl_t** table, long item){
     return 0;
 }
 
+bool hashtbl_contains(hashtbl_t* table, long item){
+    if(table == NULL) return false;
+
+    unsigned long hash = table->hash_funct(item, table->nlist) % table->nlist;
+    node_t* curr = table->list[hash]->head;
+    while(curr != NULL){
+        if((long)curr->data == item)
+            return true;
+        curr = curr->next;
+    }
+
+    return false;
+}
+
 int hashtbl_remove(hashtbl_t* table, long item){
     if(table == NULL){
         errno = EINVAL;

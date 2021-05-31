@@ -36,6 +36,12 @@ int hashtbl_insert(hashtbl_t** table, long item);
 int hashtbl_remove(hashtbl_t* table, long item);
 
 /**
+ * Given an hashtable and an item, checks if item is in table.
+ * If item is found returns true, otherwise returns false.
+ */
+bool hashtbl_contains(hashtbl_t* table, long item);
+
+/**
  * Deletes table deallocating all memory. 
  * At the end of this function, table will not point to a meaningful location of memory.
  */
