@@ -1,6 +1,6 @@
 # Compilation options
 CC 		= gcc
-CFLAGS 	+= -std=c99 -Wall -pedantic -g -I./includes -lpthread -lm -D_POSIX_C_SOURCE=200112L -D_DEFAULT_SOURCE
+CFLAGS 	+= -std=c99 -Wall -pedantic -g -I./includes -D_POSIX_C_SOURCE=200112L -D_DEFAULT_SOURCE
 
 # Directories
 SRC_DIR		= ./src
@@ -36,7 +36,7 @@ CLIENT_DEPS = $(LIB_DIR)/libutil.so $(LIB_DIR)/libapi.so
 CLIENT_LIBS = $(DYN_LINK) -lutil -lapi
 
 $(BIN_DIR)/client : $(CLIENT_OBJ)
-	$(CC) $(CFLAGS) $(CLIENT_LIBS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(CLIENT_LIBS)
 
 $(OBJ_DIR)/client/%.o : $(SRC_DIR)/client/%.c $(CLIENT_INC) $(CLIENT_DEPS)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -48,10 +48,10 @@ SERVER_OBJ := $(patsubst $(SRC_DIR)/server/%.c, $(OBJ_DIR)/server/%.o, $(SERVER_
 SERVER_INC := $(INC_DIR)/server.h
 
 SERVER_DEPS := $(LIB_DIR)/libutil.so
-SERVER_LIBS := $(DYN_LINK) -lutil
+SERVER_LIBS := $(DYN_LINK) -lutil -lpthread
 
 $(BIN_DIR)/server : $(SERVER_OBJ)
-	$(CC) $(CFLAGS) $(SERVER_LIBS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(SERVER_LIBS)
 
 $(OBJ_DIR)/server/%.o : $(SRC_DIR)/server/%.c $(SERVER_INC) $(SERVER_DEPS)
 	$(CC) $(CFLAGS) $< -c -o $@

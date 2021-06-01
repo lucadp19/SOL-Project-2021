@@ -63,7 +63,7 @@ int open_file(int worker_no, long fd_client){
         if(curr_state.files > curr_state.max_files) 
             curr_state.max_files = curr_state.files;
         logger("[STATS][CURRENT_FILES] %u files are currently stored.\n", curr_state.files);
-        logger("[STATS][CURRENT_SPACE] %u bytes are currently occupied.\n", curr_state.size);
+        logger("[STATS][CURRENT_SPACE] %u bytes are currently occupied.\n", curr_state.space);
         safe_pthread_mutex_unlock(&curr_state_mtx);
 
         file_writer_unlock(file);
