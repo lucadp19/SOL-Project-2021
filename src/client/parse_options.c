@@ -27,6 +27,7 @@ int parse_options(list_t* request_list, int argc, char* argv[]){
             // -h prints helper message
             case 'h': {
                 h_option = true;
+                config.print_helper = true;
                 return 0;
             }
 

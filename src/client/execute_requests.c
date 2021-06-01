@@ -372,7 +372,7 @@ static int rec_scan_dirs(const char* dirname, const char* exp_dir, int N){
             n_reads++;
         }
         free(new_path);
-        printf("\tGoing to next file.\n\n");
+        if( config.print_to_stdout ) printf("\tGoing to next file.\n\n");
         errno = 0;
     } if( errno != 0 ){
         perror("\t> Errror in getting files from directory");
