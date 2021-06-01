@@ -96,6 +96,7 @@ int expell_multiple_files(size_t size_to_free, list_t* expelled_list){
         }
         freed = freed + expelled->size;
     }
+    logger("[REPLACEMENT][STATS] In total %d files were removed from the server.\n", expelled_list->nelem);
 
     return 0;
 }

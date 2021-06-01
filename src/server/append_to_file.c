@@ -115,8 +115,12 @@ int append_to_file(int worker_no, long fd_client){
         }
         if(curr_state.space > curr_state.max_space) 
             curr_state.max_space = curr_state.space;
+        int curr_space = curr_state.space;
+        int curr_files = curr_state.files;
         safe_pthread_mutex_unlock(&curr_state_mtx);
         
+        logger("[APPEND_TO_FILE][STATS][CURRENT_FILES] %u files are currently stored.\n", curr_space);
+        logger("[APPEND_TO_FILE][STATS][CURRENT_SPACE] %lu bytes are currently occupied.\n", curr_files);
         
         // unlocking locks
         file_writer_unlock(file);
@@ -132,7 +136,7 @@ int append_to_file(int worker_no, long fd_client){
     }
 
     // sending files to client
-    if( send_list_of_files(worker_no, fd_client, to_expell, true) == -1){
+    if( send_list_of_files(worker_no, fd_client, to_expell, true, "REPLACEMENT") == -1){
         list_delete(&to_expell, files_node_cleaner);
         free(pathname);
         return SA_ERROR;

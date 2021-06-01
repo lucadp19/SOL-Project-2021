@@ -60,7 +60,7 @@ int read_file(int worker_no, long fd_client){
     }
 
     // sending file to client
-    if( send_single_file(worker_no, fd_client, to_send, false) == -1){
+    if( send_single_file(worker_no, fd_client, to_send, false, "READ_FILE") == -1){
         return SA_ERROR;
     }
 

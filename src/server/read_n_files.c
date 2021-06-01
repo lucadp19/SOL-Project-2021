@@ -67,7 +67,7 @@ int read_n_files(int worker_no, long fd_client){
     }
 
     // writing files to client
-    if( send_list_of_files(worker_no, fd_client, file_list, true) == -1){
+    if( send_list_of_files(worker_no, fd_client, file_list, true, "READ_N_FILES") == -1){
         reader_unlock_all(file_list);
         list_delete(&file_list, free_only_node);
         return SA_ERROR;

@@ -124,6 +124,8 @@ int write_file(int worker_no, long fd_client){
     }
     if(curr_state.space > curr_state.max_space)
         curr_state.max_space = curr_state.space;
+    logger("[STATS][CURRENT_FILES] %u files are currently stored.\n", curr_state.files);
+    logger("[STATS][CURRENT_SPACE] %lu bytes are currently occupied.\n", curr_state.space);
     safe_pthread_mutex_unlock(&curr_state_mtx);
 
     // unlocking file and general mutex
@@ -139,14 +141,14 @@ int write_file(int worker_no, long fd_client){
     }
 
     // sending files to client
-    if( send_list_of_files(worker_no, fd_client, to_expell, true) == -1){
+    if( send_list_of_files(worker_no, fd_client, to_expell, true, "REPLACEMENT") == -1){
         free(pathname);
         list_delete(&to_expell, files_node_cleaner);
         return SA_ERROR;
     }
 
     logger("[THREAD %d] [WRITE_FILE_SUCCESS] Successfully written file \"%s\" into server.\n", worker_no, pathname);
-    logger("[THREAD %d] [WRITE_FILE_SUCCESS][WB] %lu\n", worker_no, size);
+    logger("[THREAD %d] [WRITE_FILE_SUCCESS][WB] %lu bytes were written.\n", worker_no, size);
 
     free(pathname);    
     list_delete(&to_expell, files_node_cleaner);

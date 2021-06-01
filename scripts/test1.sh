@@ -23,11 +23,11 @@ SERVER_PID=$! # getting server PID
 sleep 1 # just to make valgrind print stuff
 
 echo -e "${GREEN}\n\t[CLIENT 1] Tests -W and -c.${NORMC}\n";
-${CLIENT} -f ${SOCK_NAME} -p -t 200 -W tests/hashtable_test.c,tests/list_test.c -D tests/test1/deleted -c tests/list_test.c
+${CLIENT} -f ${SOCK_NAME} -p -t 200 -W tests/test1/file0.txt,tests/test1/file1.txt -D tests/test1/deleted -c tests/test1/file0.txt
 echo -e "${GREEN}\n\t[CLIENT 2] Tests -w.${NORMC}\n";
 ${CLIENT} -f ${SOCK_NAME} -p -t 200 -w tests/test1/path -D tests/test1/deleted
 echo -e "${GREEN}\n\t[CLIENT 3] Tests -R and -r.${NORMC}\n";
-${CLIENT} -f ${SOCK_NAME} -p -t 200 -R -d tests/test1/readnfiles -r tests/hashtable_test.c -d tests/test1/readsingle
+${CLIENT} -f ${SOCK_NAME} -p -t 200 -R -d tests/test1/readnfiles -r tests/test1/file0.txt -d tests/test1/readsingle
 
 sleep 1
 kill -SIGHUP ${SERVER_PID}

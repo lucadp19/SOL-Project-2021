@@ -29,6 +29,7 @@ int remove_file(int worker_no, long fd_client){
     if(hashmap_get_by_key(files, pathname, (void**)&to_remove) == -1){ // file not present => success
         if(errno == ENOENT) {
             safe_pthread_mutex_unlock(&files_mtx);
+            logger("[THREAD %d][REMOVE_FILE_SUCCESS] File %s is not currently present in server.\n", worker_no, pathname);
             free(pathname);
             return SA_SUCCESS;
         } else if (errno == EINVAL) { // files is NULL, abort
@@ -59,6 +60,8 @@ int remove_file(int worker_no, long fd_client){
     safe_pthread_mutex_lock(&curr_state_mtx);
     curr_state.files--;
     curr_state.space -= to_remove->size;
+    logger("[STATS][CURRENT_FILES] %u files are currently stored.\n", curr_state.files);
+    logger("[STATS][CURRENT_SPACE] %lu bytes are currently occupied.\n", curr_state.space);
     safe_pthread_mutex_unlock(&curr_state_mtx);
 
     hashmap_remove(files, pathname, NULL, (void**)&to_remove);

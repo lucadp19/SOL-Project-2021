@@ -208,6 +208,7 @@ int main(int argc, char* argv[]){
 
                 debug("New connection! File descriptor: %ld.\n", fd_client);
                 logger("[MAIN] [NEW_CONN] New client connected: file descriptor is %ld.\n", fd_client);
+                logger("[STATS][CURRENT_CONNECTIONS] %u clients are currently connected.\n", curr_state.conn);
                 
                 // no need for mutex, only this thread deals with max_conn
                 curr_state.conn++;
@@ -485,7 +486,8 @@ static void close_client(long fd_client){
 
     // closing connection
     close(fd_client);
-    logger("[MAIN] [CLOSE_CONN] Closed connection with client %ld.\n", fd_client);
+    logger("[MAIN][CLOSE_CONN] Closed connection with client %ld.\n", fd_client);
+    logger("[STATS][CURRENT_CONNECTIONS] %u clients are currently connected.\n", curr_state.conn);
 
     // no need for mutex, only this thread deals with curr_state.conn/max_conn
     curr_state.conn--;

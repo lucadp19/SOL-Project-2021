@@ -290,17 +290,19 @@ int append_to_file(int worker_no, long fd_client);
 /**
  * Given a single file, sends the contents of the file to client. 
  * If send_path is true, before sending the contents sends the pathname.
+ * The operation string is used for logging purposes.
  * If a file has empty contents, no content shall be sent.
  * Returns 0 on success, -1 on error.
  */
-int send_single_file(int worker_no, long fd_client, file_t* file, bool send_path);
+int send_single_file(int worker_no, long fd_client, file_t* file, bool send_path, const char* operation);
 /**
  * Given a list of files, sends all of them to client.
  * If send_path is true, before sending the contents of a file sends also its pathname.
+ * The operation string is used for logging purposes.
  * If a file has empty contents, no content shall be sent.
  * Returns 0 on success (every file has been sent), -1 on error.
  */
-int send_list_of_files(int worker_no, long fd_client, list_t* files, bool send_path);
+int send_list_of_files(int worker_no, long fd_client, list_t* files, bool send_path, const char* operation);
 
 /** Given a node containing a file, frees all memory. */
 void files_node_cleaner(node_t* node);
