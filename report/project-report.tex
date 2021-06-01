@@ -1,0 +1,143 @@
+\documentclass[11pt,oneface]{article}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage[italian]{babel}
+\usepackage{microtype}
+\usepackage[margin=2cm]{geometry}
+\usepackage{newtxtext, newtxmath}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{minted}
+\usemintedstyle{manni}
+
+\definecolor{bg}{rgb}{0.97,0.97,0.97}
+
+\setminted{
+    bgcolor=bg,
+    fontsize=\small,
+    breaklines=true,
+    escapeinside=||,
+    mathescape=true,
+}
+\setmintedinline{
+    fontsize=\normalsize
+}
+\newmintinline[inlinec]{c}{}
+\newmintinline[make]{text}{}
+\newmintinline[shell]{text}{}
+
+
+\DeclareRobustCommand\crfamily{\fontfamily{pcr}\selectfont}
+\DeclareTextFontCommand{\textcr}{\crfamily}
+\newcommand{\code}{\textcr}
+
+\author{Luca De Paulis}
+\title{Relazione sul Progetto di Sistemi Operativi e Laboratorio \\
+    \large A.A. 2020/2021 }
+
+\begin{document}
+\maketitle
+
+\section{Introduzione e informazioni generali}
+Il progetto di Sistemi Operativi e Laboratorio dell'A.A. 2020/2021 consiste nella realizzazione
+di un sistema di \emph{filestorage} gestito da un server multithreaded che comunica con i vari
+potenziali clienti tramite un API. Durante tutto il corso dello sviluppo, il codice sorgente e
+i vari file necessari al funzionamento del progettextttto sono stati caricati su Github e sono accessibili
+alla repository pubblica con indirizzo \url{https://github.com/lucadp19/SOL-Project-2021}.
+
+\section{Makefile}
+Per compilare il progetto è messo a disposizione un Makefile con diverse opzioni. 
+\begin{description}
+    \item[\make{make}]  L'opzione base è la regola \make{all}, che può essere invocata dando il comando \make{make}.
+        Questa regola compila l'intero progetto, creando inizialmente le cartelle necessarie se esse non sono ancora presenti.
+    \item[\make{make clean}] Per ripulire la directory dai vari file oggetto, eseguibili e librerie viene anche messa a disposizione una regola \make{make clean}.
+    \item[\make{make test1}] La regola \make{make test1}, se lanciata dopo la compilazione, si occupa di eseguire il primo test, che mostra le varie opzioni del client.
+    \item[\make{make test2}] La regola \make{make test2} esegue il secondo test, che mostra l'algoritmo di rimpiazzamento del server. Di default questa regola fa in modo che il server scelga l'algoritmo LRU, ma con le regole \make{make test2FIFO} e \make{make test2LRU} possiamo rendere esplicita questa scelta.
+    \item[\make{make cleanTests}] Vengono inoltre fornite tre regole ulteriori, ovvero \make{make cleanTest1}, \make{make cleanTest2} e \make{make cleanTests} che si occupano solo di ripulire i file generati dai vari test in modo da poterli rieseguire partendo da uno stato pulito. 
+    \item[\make{make stats}] Infine il target \make{make stats} lancia lo script \shell{scripts/statistiche.sh} che tenta di analizzare l'ultimo file di log presente nella directory \make{logs/}.
+\end{description}
+
+\section{Libreria di utilities}
+Il client, il server e la libreria di API sfruttano tutte i tipi e le funzioni di base definite nella libreria \shell{libutil.so}. Essa è composta da diversi include file, ognuno associato ad una specifica funzionalità.
+
+Il file \shell{util/util.h} contiene gli include file più comuni, più alcune funzioni e macro che vengono usate frequentemente in ogni parte del progetto.
+
+I file \shell{util/node.h}, \shell{util/list.h}, \shell{util/hash.h}, \shell{util/hash/hashtable.h} e \shell{util/hash/hashmap.h} contengono in particolare le strutture dati più usate nel corso del progetto, ovvero liste doppiamente linkate e tabelle hash. 
+
+La distinzione tra \emph{tabelle} e \emph{mappe} è dettata dal fatto che le due strutture vengono usate in modo diverso: la prima per gestire collezioni di interi, mentre la seconda collezioni di coppie chiave-valore, dove la chiave è una stringa e il valore è un tipo generico \inlinec{void*}; unificarle in una sola struttura avrebbe incrementato di molto la complessità del codice.
+
+Infine il file \shell{util/files.h} contiene alcune funzionalità per gestire la scrittura o lettura di file dal disco, in modo da evitare la duplicazione del codice tra client e API.
+
+\section{API}
+
+Le API permettono la comunicazione tra client e server tramite un insieme di funzioni definite in \shell{api.h}. Tra queste, \inlinec{api_perror} è degna di nota in quanto consente di scrivere su stderr gli errori generati dalle funzioni delle API con un messaggio che rispecchia meglio il loro significato (descritto comunque nella documentazione delle funzioni in \shell{api.h}) rispetto alla funzione \inlinec{perror} standard.
+
+L'API è realizzata in modo da essere completamente indipendente dal client che la usa, e pertanto viene compilata in una libreria dinamica di nome \shell{libapi.so}. Per poterla usare è tuttavia necessario linkare anche la libreria di utilities \shell{libutil.so}, che contiene funzionalità sfruttate dalle API.
+
+La comunicazione tra server e API sfrutta un preciso protocollo che dipende dal tipo di richiesta fatta dalle API: i dati necessari per implementare questo protocollo sono descritti nell'include file \shell{server-api-protocol.h}. In particolare le API innanzitutto inviano al server un codice che rappresenta il tipo di operazione richiesta dal client, e poi inviano tutti i dati necessari. A questo punto:
+\begin{itemize}
+    \item se l'operazione può comportare l'espulsione di file dal server e il loro invio al client attraverso le API, il server invia innanzitutto un messaggio intermedio che indica la buona riuscita dell'operazione fino a quel punto oppure un errore, poi invia i file espulsi e infine invia un codice di successo/errore finale;
+    \item invece se l'operazione non comporta espulsione di file il server invia semplicemente un messaggio finale alle API.
+\end{itemize}
+
+Alla fine della comunicazione con il server le API inviano al client il codice restituito dal server opportunamente trasformato in un valore di \inlinec{errno}: il client può leggerlo tramite \inlinec{api_perror} e, nel caso sia un codice di errore, decidere se terminare o ritentare. In generale gli errori inviati dal server sono \emph{non-fatali}: l'unico caso di errore fatale è quello descritto da \inlinec{ENOTRECOVERABLE} che indica un fallimento da parte del server, oppure delle API, oppure nella comunicazione tra i due.
+
+Infine, le funzioni \inlinec{lockFile} e \inlinec{unlockFile} non sono state realizzate, ma sono comunque invocabili da un client: al momento entrambe le funzioni restituiscono immediatamente \inlinec{-1} con un codice di errore \inlinec{errno = ENOSYS}, per indicare che la funzione non è implementata.
+
+\section{Il client}
+
+Il client sfrutta le API fornite per inoltrare delle richieste al server. 
+Le richieste vengono passate al client tramite linea di comando ed esso si occupa di farne il parsing e controllare che rispettino i vincoli dati dalla specifica. 
+Questo controllo tuttavia viene ignorato se viene passata al client l'opzione \shell{-h}, che stampa un messaggio che spiega le varie opzioni e fa terminare il client immediatamente.
+
+Per fare il parsing il client sfrutta l'estensione GNU del comando \inlinec{getopt} che consente di dichiarare opzioni con valori opzionali: in particolare ciò viene sfruttato per realizzare l'opzione \shell{-R}. Per chiamare questa opzione con un valore esplicito è quindi importante non lasciare spazi tra \shell{-R} e il valore scelto.
+
+Rispetto a quanto descritto nella specifica, il client ha inoltre un'opzione \shell{-a} che setta il tempo (in millisecondi) da aspettare dall'inizio di un tentativo di connessione verso il server fino all'eventuale timeout (segnalato dalla \inlinec{openConnection} tramite l'errore \inlinec{ETIMEDOUT}).
+
+Inoltre il client si occupa di trasformare ogni path relativo dato dall'utente in un path assoluto, in modo che il server identifichi i file solamente attraverso il loro path assoluto. Questo non vale per le directory passate alle opzioni \shell{-d} e \shell{-D}: esse potrebbero non esistere e quindi sarebbe impossibile determinare il loro path assoluto tramite la funzione \inlinec{realpath}. In questo caso le API si occupano di creare le directory che non esiste, anche ricorsivamente, usando alcune delle funzioni dell'include file \shell{util/files.h}.
+
+Come nel caso delle API, non avendo implementato le funzionalità di lock/unlock dei file se le opzioni \shell{-l} o \shell{-u} vengono invocate dall'utente la funzione che esegue le varie opzioni stamperà un messaggio di errore spiegando che quell'opzione non è stata implementata.
+
+Infine, il client non termina al primo codice di errore restituito dal server (tramite le API): infatti è possibile che il file richiesto sia stato eliminato dall'algoritmo di rimpiazzamento, oppure che sia stato aperto da un altro client in modalità locked, eccetera. Dunque il client (se l'opzione \shell{-p} è stata selezionata) scrive su schermo l'eventuale errore e, se l'errore non è fatale, prova ad eseguire il resto delle operazioni.
+
+\section{Il server}
+
+Il server è l'applicazione multithreaded che gestisce lo storage di file. All'apertura legge un file di configurazione con il seguente formato:
+\begin{minted}{text}
+    no_worker = |<\emph{number of worker threads}>|
+    max_space = |<\emph{max space in MBytes}>|
+    max_files = |<\emph{max number of files}>|
+    cache_pol = |<\emph{cache replacement policy, may be FIFO or LRU}>|
+    sock_path = |<\emph{path to socket file}>|
+    path_dlog = |<\emph{path to the directory containing log files}>|
+\end{minted}
+Possono esserci un numero arbitrario di spazi tra la parola chiave e il simbolo \shell{=}, oppure tra esso e il valore; inoltre possono esserci un numero arbitrario di righe vuote tra una coppia \shell{|\emph{chiave}|=|\emph{valore}|} e un'altra, ma ogni tale coppia deve essere su una riga separata.
+
+Di default il server assume che il file di configurazione si trovi in \shell{./config/config.txt}; per cambiare path basta passare il path desiderato come unico argomento da linea di comando all'eseguibile del server.
+
+All'avvio il server quindi crea le varie strutture dati necessarie al suo funzionamento, come la hashmap \inlinec{files}, che conterrà i vari file memorizzati nel server, e lancia diversi thread. Uno di questi è il thread \emph{signal handler}: il suo scopo è gestire i segnali \shell{SIGHUP}, \shell{SIGINT} e \shell{SIGQUIT} inviati al server per richiederne la terminazione. In tutti e tre i casi il server aspetta che i thread terminino il loro lavoro (se non sono in attesa) e libera la memoria allocata, in modo da ottenere una chiusura pulita. 
+
+Le richieste dei client sono gestite interamente dai thread workers: il thread master (cioè il main) si occupa di inserirle in una coda FIFO, mentre i worker prelevano queste richieste, le eseguono e restituiscono il risultato al thread main. In caso di successo o errore non-fatale il thread main continua la sua connessione con il cliente, mentre in caso contrario chiude la connessione.
+
+Nel gestire le varie richieste i worker devono agire concorrentemente sulla hashmap dei file. Il protocollo di accesso scelto è quello delle \emph{lock reader-writer}: ogni file può essere aperto da un thread in modalità lettore (se deve solo leggere le informazioni contenute nel file) oppure in modalità scrittore (se deve anche modificarle). In particolare più thread possono leggere lo stesso file contemporaneamente, ma se un thread è in modalità scrittore nessun altro thread può né leggere né modificare la hashmap.
+
+Per gestire la memoria limitata dai parametri definiti dal file di configurazione, il server implementa degli algoritmi di rimpiazzamento, che consentono di eliminare file in modo da liberare spazio. Gli algoritmi implementati sono l'algoritmo FIFO (che elimina il file creato più lontanamente nel tempo) e l'algoritmo LRU (che elimina il file usato più lontanamente nel tempo).
+
+Quando il server raggiunge i limiti prefissati sceglie dunque dei file da espellere e, se possibile, li invia alle API che avranno il compito di scriverli su disco.
+Tuttavia nel caso della \inlinec{openFile} con flag \inlinec{O_CREATE} ciò non è possibile, in quanto la funzione della API non contempla la possibilità di scrivere file su disco. In questo caso il file viene semplicemente distrutto e questo fatto viene riportato nel file di log. 
+
+Questo file (che verrà creato nella directory specificata nel file di configurazione) conterrà ogni operazione svolta dal server durante il suo utilizzo, il successo o fallimento e l'eventuale quantità di dati scritti o letti. Per ottenere alcuni dati significativi da un file di log è possibile sfruttare lo script \shell{scripts/statistiche.sh} invocandolo direttamente oppure lanciando il target \shell{make stats} del Makefile.
+
+\section{Test e scripts}
+Per testare le varie funzionalità del server e del client sono stati creati due file di test, \shell{scripts/test1.sh} e \shell{scripts/test2.sh}. 
+
+Il primo serve a mostrare le varie opzioni del client e il suo funzionamento, mentre il secondo serve a mostrare il funzionamento dell'algoritmo di rimpiazzamento dei file.
+In particolare per mostrare la differenza tra diverse politiche di rimpiazzamento lo script \shell{scripts/test2.sh} può opzionalmente prendere un parametro da linea di comando, che corrisponde al tipo di algoritmo da usare e può essere LRU oppure FIFO.
+
+I due script di test possono anche essere lanciati attraverso i target \shell{make test1} e \shell{make test2} del Makefile: in questo caso il test2 userà di default l'algoritmo LRU, ma si può specificare esplicitamente l'algoritmo FIFO tramite il target \shell{make test2FIFO}.
+
+Infine lo script \shell{scripts/statistiche.sh} può essere usato per ottenere alcune statistiche significative dal file di log generato dal server. Se si passa un parametro da linea di comando lo script tenterà di analizzare il file al path dato; altrimenti di default cercherà il file più recente contenuto nella directory \shell{./logs/}.
+
+
+\end{document}

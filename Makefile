@@ -106,7 +106,7 @@ clean: cleanTests
 	@echo "Cleaning complete!"
 
 # ---------------- Official Tests ----------------	#
-.PHONY : test1 test2
+.PHONY : test1 test2 stats
 .PHONY : cleanTests cleanTest1 cleanTest2
 
 cleanTests: cleanTest1 cleanTest2
@@ -138,3 +138,6 @@ cleanTest2:
 	@rm -rf $(TEST_DIR)/test2/deleted_4
 	@rm -rf $(TEST_DIR)/test2/read_files
 	@echo "Cleaning complete!"
+
+stats:
+	$(SCRIPT_DIR)/statistiche.sh
