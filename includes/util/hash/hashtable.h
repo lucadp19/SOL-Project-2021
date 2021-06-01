@@ -16,22 +16,31 @@ typedef struct {
 } hashtbl_t;
 
 /**
- * Creates and allocates a new hashtable with nlist positions.
+ * Creates and allocates a new hashtable with nlist positions with a given hash function.
  * On success returns 0 and returns the new hashtable in table,
  * on error returns -1 and sets errno.
+ * Possible errors are:
+ *  * memory allocation failed, errno = [ENOMEM].
  */
 int hashtbl_init(hashtbl_t** table, int nlist, unsigned long (*hash_funct)(long, long));
 
 /**
- * Inserts a new element into the hashtable table.
+ * Inserts a new element into the hashtable pointed by table.
+ * In doing so, the function may double the size of the hashtable.
  * On success returns 0, on error returns -1 and sets errno.
+ * Possible errors are:
+ *  * table is NULL, errno = [EINVAL];
+ *  * memory allocation failed, errno = [ENOMEM].
  */
 int hashtbl_insert(hashtbl_t** table, long item);
 
 /**
  * Removes item from the hashtable table.
- * If the element is found and removed, or if the table did not contain item, it returns 0;
+ * If the element is found and removed, it returns 0.
+ * If the element is not found, it returns 1.
  * On error the function returns -1 and sets errno.
+ * Possible errors are:
+ *  * table is NULL, errno = [EINVAL].
  */
 int hashtbl_remove(hashtbl_t* table, long item);
 

@@ -150,7 +150,10 @@ void hashmap_free(hashmap_t** map){
 }
 
 int hashmap_get_by_key(hashmap_t* map, const char* key, void** data){
-    if(map == NULL) return -1;
+    if(map == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
 
     unsigned long hash = (map->hash_funct(key, map->nlist)) % (map->nlist);
     node_t* curr = map->list[hash]->head;
@@ -164,6 +167,7 @@ int hashmap_get_by_key(hashmap_t* map, const char* key, void** data){
         curr = curr->next;
     }
 
+    errno = ENOENT;
     return -1;
 }
 

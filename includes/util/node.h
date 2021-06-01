@@ -15,7 +15,7 @@ typedef struct _node_t {
 } node_t;
 
 /**
- * Creates a new node with the given key and data.
+ * Creates a new node with the given key and data and returns it.
  * If allocation fails, it returns NULL and sets errno (ENOMEM).
  */
 node_t* create_node(const char* key, void* data);

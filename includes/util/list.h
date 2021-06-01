@@ -16,7 +16,8 @@ typedef struct {
 
 /** 
  * Returns a newly allocated list_t object. 
- * If allocation fails, it returns NULL ad sets errno (ENOMEM).
+ * May fail if:
+ *  * allocation fails: the function returns NULL ad sets errno to ENOMEM.
  */
 list_t* empty_list();
 /**
@@ -29,25 +30,35 @@ void list_delete(list_t** list, void (*node_cleaner) (node_t*));
 
 /**
  * Adds a new node with the given key and data to the front of list.
- * If the given list is NULL it returns -1 and sets errno (EINVAL),
- * whereas in case of success it returns 0.
+ * On success returns 0; otherwise returns -1 and sets errno.
+ * Possible errors are:
+ *  * list is NULL, errno = [EINVAL];
+ *  * node allocation fails, errno = [ENOMEM].
  */
 int list_push_front(list_t* list, const char* key, void* data);
 /**
  * Adds a new node with the given key and data to the back of list.
- * If the given list or node is NULL it returns -1 and sets errno (EINVAL),
- * whereas in case of success it returns 0.
+ * On success returns 0; otherwise returns -1 and sets errno.
+ * Possible errors are:
+ *  * list is NULL, errno = [EINVAL];
+ *  * node allocation fails, errno = [ENOMEM].
  */
 int list_push_back(list_t* list, const char* key, void* data);
 
 /**
- * Takes the first node of list and returns its contents into key and data.
- * If list is empty it returns 0 and sets errno (EINVAL), otherwise it returns 0.
+ * Takes the first node of list and returns its contents into key and data, if they are not NULL.
+ * If they are NULL, those contents will be lost.
+ * On success returns 0, on error returns -1 and sets errno.
+ * Possible errors are:
+ *  * list is NULL or empty, errno = [EINVAL].
  */
 int list_pop_front(list_t* list, const char** key, void** data);
 /**
- * Takes the last node of list and returns its contents into key and data.
- * If list is empty it returns 0 and sets errno (EINVAL), otherwise it returns 0.
+ * Takes the last node of list and returns its contents into key and data, if they are not NULL.
+ * If they are NULL, those contents will be lost.
+ * On success returns 0, on error returns -1 and sets errno.
+ * Possible errors are:
+ *  * list is NULL or empty, errno = [EINVAL].
  */
 int list_pop_back(list_t* list, const char** key, void** data);
 

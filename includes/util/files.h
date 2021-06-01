@@ -12,16 +12,16 @@ typedef struct {
 
 /** Taken a path to a file (absolute or relative),
  * strips away everything but the basename and returns it.
- * I
-                     f there are no slashes ('/') in pathname, returns pathname.
+ * If there are no slashes ('/') in pathname, returns pathname.
  */
 const char* remove_path_from_name(const char* pathname);
 
 /** 
  * Recursively creates all the directories necessary to create dirname.
  * On success returns -1, on error sets errno and returns -1.
- * Possible values for errno are ENAMETOOLONG if the path is too long, or
- * any of the errors returned by mkdir (man 2 mkdir).
+ * Possible values for errno are 
+ *  * [ENAMETOOLONG] if the path is too long, 
+ *  * any of the errors returned by mkdir (man 2 mkdir).
  */
 int mkdir_p(const char* dirname);
 
@@ -42,7 +42,5 @@ void free_node_size_n_buf(node_t* node);
  * Returns 0 on success, -1 on error.
  */
 int get_file_size(const char* pathname, off_t* size);
-
-
 
 #endif

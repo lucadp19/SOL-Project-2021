@@ -145,10 +145,6 @@ void hashtbl_free(hashtbl_t** table){
     free(*table);
 }
 
-// Taken from Cormen and the following link:
-// https://www.cs.hmc.edu/~geoff/classes/hmc.cs070.200101/homework10/hashfuncs.html
 unsigned long default_hashtbl_hash(long val, long nlist){
-    double A = 0.5*(sqrt(5) - 1);
-    double useless;
-    return (unsigned long)floor(nlist*modf(val*A, &useless));
+    return val % nlist;
 }

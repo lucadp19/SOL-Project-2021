@@ -57,8 +57,11 @@ int _debug(const char* format, ...);
 #endif
 
 // -------------- FLAGS -------------- //
+/** File is opened with no flags */
 #define O_NOFLAG 0
+/** File has to be created */
 #define O_CREATE 1
+/** File has to be locked */
 #define O_LOCK   2
 
 /**
