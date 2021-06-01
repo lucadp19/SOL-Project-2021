@@ -95,7 +95,7 @@ create_dirs:
 # 	------------------ Cleaning ------------------	#
 
 .PHONY: clean
-clean: clean_test1
+clean: cleanTests
 	@echo "Removing object files and executables..."
 	@rm -f vgcore.*
 	@rm -rf $(OBJ_DIR)/*
@@ -121,23 +121,34 @@ $(BIN_DIR)/list_test: $(TEST_DIR)/list_test.c $(LIB_DIR)/libutil.so
 
 # ---------------- Official Tests ----------------	#
 .PHONY : test1 test2
-.PHONY : clean_test1 clean_test2
+.PHONY : cleanTests cleanTest1 cleanTest2
 
-test1:
+cleanTests: cleanTest1 cleanTest2
+
+test1: cleanTest1
 	$(SCRIPT_DIR)/test1.sh
 
-clean_test1:
+cleanTest1:
 	@echo "Cleaning files created by test1..."
 	@rm -rf $(TEST_DIR)/test1/deleted
 	@rm -rf $(TEST_DIR)/test1/readnfiles
 	@rm -rf $(TEST_DIR)/test1/readsingle
 	@echo "Cleaning complete!"
 
-test2:
-	$(SCRIPT_DIR)/test2.sh
+test2: cleanTest2
+	$(SCRIPT_DIR)/test2.sh LRU
 	
-clean_test2:
+test2FIFO: cleanTest2
+	$(SCRIPT_DIR)/test2.sh FIFO
+
+test2LRU: cleanTest2
+	$(SCRIPT_DIR)/test2.sh LRU
+
+cleanTest2:
 	@echo "Cleaning files created by test2..."
 	@rm -rf $(TEST_DIR)/test2/deleted_1
 	@rm -rf $(TEST_DIR)/test2/deleted_2
+	@rm -rf $(TEST_DIR)/test2/deleted_3
+	@rm -rf $(TEST_DIR)/test2/deleted_4
+	@rm -rf $(TEST_DIR)/test2/read_files
 	@echo "Cleaning complete!"
