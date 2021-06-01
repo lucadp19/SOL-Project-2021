@@ -105,7 +105,7 @@ int append_to_file(int worker_no, long fd_client){
         if(size_to_remove > 0){
             file->can_be_expelled = false;
             // maybe I should check the error
-            expell_multiple_LRU(size_to_remove, to_expell);
+            expell_multiple_files(size_to_remove, to_expell);
             file->can_be_expelled = true;
         }
         if(curr_state.space > curr_state.max_space) 

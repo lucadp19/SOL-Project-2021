@@ -23,6 +23,7 @@ int get_server_config(const char* path_to_config){
     bool max_space = false;
     bool socket_name = false;
     bool no_workers = false;
+    bool policy = false;
 
 
     if( (config = fopen(path_to_config, "r")) == NULL){
@@ -31,7 +32,7 @@ int get_server_config(const char* path_to_config){
 
     int err;
     char current_opt[10];
-    for(int i = 0; i < 5; i++){
+    for(int i = 0; i < 6; i++){
         FSCANF(config, " %9c = ", current_opt, err);
 
         // max_files
@@ -64,7 +65,7 @@ int get_server_config(const char* path_to_config){
         if(strncmp(current_opt, "sock_path", 9) == 0 && !socket_name){
             socket_name = true;
             // FSCANF(config, "%s", server_config.socket_path, err);
-            if( fgets(server_config.socket_path, 128, config) == NULL ){
+            if( fgets(server_config.socket_path, PATH_MAX, config) == NULL ){
                 fprintf(stderr, "Error in config file! Aborting.\n");
                 return -1;
             }
@@ -78,7 +79,7 @@ int get_server_config(const char* path_to_config){
         if(strncmp(current_opt, "path_dlog", 9) == 0 && !log_file){
             log_file = true;
             // FSCANF(config, "%s", server_config.log_dir_path, err);
-            if( fgets(server_config.log_dir_path, 128, config) == NULL ){
+            if( fgets(server_config.log_dir_path, PATH_MAX, config) == NULL ){
                 fprintf(stderr, "Error in config file! Aborting.\n");
                 return -1;
             }
@@ -88,7 +89,36 @@ int get_server_config(const char* path_to_config){
             continue;
         }
 
+        // policy
+        if(strncmp(current_opt, "cache_pol", 9) == 0 && !policy){
+            policy = true;
+            char policy_code[5];
+            if( fgets(policy_code, 5, config) == NULL ){
+                fprintf(stderr, "Error in config file! Aborting.\n");
+                return -1;
+            }
+            // removing trailing newline
+            if( strncmp(policy_code, "LRU", 3) == 0 )
+                server_config.policy = LRU;
+            else if( strncmp(policy_code, "FIFO", 4) == 0 )
+                server_config.policy = FIFO;
+            else {
+                fprintf(stderr, "Error in config file: unknown cache policy. Aborting.\n");
+                return -1;
+            }
+            debug("option path_dlog = %s\n", server_config.log_dir_path);
+            continue;
+        }
+
         fprintf(stderr, "Unknown or repeated option in config file. Aborting.\n");
+        return -1;
+    }
+
+    if(!policy || !max_files || !max_space || !log_file || !socket_name || !no_workers){
+        fprintf(stderr, "Missing option in config. Aborting.\n");
+        fprintf(stderr, "policy=%d, max_files=%d, max_space=%d, log_file=%d, socket_name=%d, no_workers=%d\n",
+            policy, max_files, max_space, log_file, socket_name, no_workers
+        );
         return -1;
     }
 

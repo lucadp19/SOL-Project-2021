@@ -1,10 +1,35 @@
 #include "server.h"
 
+/** 
+ * Given two pointers to struct timespec structures, returns
+ *  *  1 if the first is greater than the second
+ *  *  0 if they are exactly equal
+ *  * -1 if the first is smaller than the second.
+ */
 static int timespec_cmp(struct timespec *a, struct timespec *b);
 
-int expell_LRU(file_t** expelled_ptr){
-    struct timespec* least_time;
+/** 
+ * Given two files, orders them in LRU order. Returns
+ *  *  1 if the first was used more recently than the second
+ *  *  0 if they are exactly equal
+ *  * -1 if the first was used less recently than the second.
+ */
+static int LRU_policy(file_t* a, file_t* b);
+
+/** 
+ * Given two files, orders them in FIFO order. Returns
+ *  *  1 if the first was created more recently than the second
+ *  *  0 if they are exactly equal
+ *  * -1 if the first was created less recently than the second.
+ */
+static int FIFO_policy(file_t* a, file_t* b);
+
+int expell_single_file(file_t** expelled_ptr){
     file_t* least_file = NULL;
+
+    // setting up replacement policy
+    int (*policy)(file_t*, file_t*) = ( server_config.policy == FIFO ? FIFO_policy : LRU_policy );
+    char* policy_name = ( server_config.policy == FIFO ? "FIFO" : "LRU" );
     
     if(files->nelem == 0){
         return -1;
@@ -22,25 +47,21 @@ int expell_LRU(file_t** expelled_ptr){
 
         file_writer_lock(curr_file);
 
-        if(least_file == NULL || timespec_cmp(&(curr_file->last_use), least_time) < 0){
+        if(least_file == NULL || policy(curr_file, least_file) < 0){
             if(least_file != NULL) file_writer_unlock(least_file);
 
-            // updating times
-            least_time = &(curr_file->last_use);
+            // updating least_file
             least_file = curr_file;
         } else { // this file won't be expelled (for now)
             file_writer_unlock(curr_file);
         }
-
-        debug("\t[LRU] least: %lu, current: %lu, curr-name: %s\n",
-            least_time, curr_file->last_use, curr_file->path_name);
 
     } if( err == -1 ) // won't happen: both iter and files are != NULL
         return -1;
 
     // least_file is != NULL
     char* path = least_file->path_name;
-    debug("\t[LRU] File to be removed is: %s\n", path);
+    debug("\t[%s] File to be removed is: %s\n", policy_name, path);
     hashmap_remove(files, path, NULL, (void**)expelled_ptr);
 
     // no need for mutex, it has already been locked
@@ -49,12 +70,12 @@ int expell_LRU(file_t** expelled_ptr){
     curr_state.no_LRU++;
     free(iter);
 
-    logger("[REPLACEMENT] File \"%s\" was removed from the server by the replacement algorithm.\n", (*expelled_ptr)->path_name);
+    logger("[REPLACEMENT][%s] File \"%s\" was removed from the server by the replacement algorithm.\n", policy_name, (*expelled_ptr)->path_name);
     logger("[REPLACEMENT][BF] %lu bytes freed.\n", (*expelled_ptr)->size);
     return 0;
 }
 
-int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list){
+int expell_multiple_files(size_t size_to_free, list_t* expelled_list){
     if(expelled_list == NULL) return -1;
 
     size_t freed = 0;
@@ -65,7 +86,7 @@ int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list){
 
     while(freed < size_to_free){
         file_t* expelled;
-        if(expell_LRU(&expelled) == -1)
+        if(expell_single_file(&expelled) == -1)
             break;
 
         if( list_push_back(expelled_list, NULL, expelled) == -1){
@@ -85,4 +106,12 @@ static int timespec_cmp(struct timespec* a, struct timespec* b){
     if(a->tv_nsec > b->tv_nsec) return 1;
     if(a->tv_nsec < b->tv_nsec) return -1;
     return 0;
+}
+
+static int LRU_policy(file_t* a, file_t* b){
+    return timespec_cmp(&(a->last_use), &(b->last_use));
+}
+
+static int FIFO_policy(file_t* a, file_t* b){
+    return timespec_cmp(&(a->creation_time), &(b->creation_time));
 }

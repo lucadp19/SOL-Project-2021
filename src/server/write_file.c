@@ -114,7 +114,7 @@ int write_file(int worker_no, long fd_client){
     long size_to_remove = curr_state.space - server_config.max_space;
     if(size_to_remove > 0){
         file->can_be_expelled = false;
-        expell_multiple_LRU(size_to_remove, to_expell);
+        expell_multiple_files(size_to_remove, to_expell);
         file->can_be_expelled = true;
     }
     if(curr_state.space > curr_state.max_space)

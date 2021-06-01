@@ -51,7 +51,7 @@ int open_file(int worker_no, long fd_client){
         safe_pthread_mutex_lock(&curr_state_mtx);
         debug("curr_state.files = %d, server_config.max_files = %d", curr_state.files, server_config.max_files);
         if(curr_state.files == server_config.max_files){
-            expell_LRU(&expelled);
+            expell_single_file(&expelled);
         }
         safe_pthread_mutex_unlock(&curr_state_mtx);
         file->can_be_expelled = true;
@@ -186,14 +186,19 @@ static int create_file(file_t** file, char* pathname, long flags, long fd_client
 
     // current thread gets mutex control
     file_writer_lock(*file);
-
+    
+    // updating time of creation
+    if(clock_gettime(CLOCK_MONOTONIC, &((*file)->creation_time)) == -1){
+        perror("Error in getting clock time");
+        fprintf(stderr, "Fatal error in getting clock time. Aborting.");
+        exit(EXIT_FAILURE);
+    }
     // updating time of last use
     if(clock_gettime(CLOCK_MONOTONIC, &((*file)->last_use)) == -1){
         perror("Error in getting clock time");
         fprintf(stderr, "Fatal error in getting clock time. Aborting.");
         exit(EXIT_FAILURE);
     }
-    // (*file)->last_use = time(NULL);
 
     return 0;
 }

@@ -8,6 +8,12 @@
 
 #include "server-api-protocol.h"
 
+/** File replacement policy. */
+typedef enum {
+    LRU,
+    FIFO
+} policy_t;
+
 /** A server configuration. */
 typedef struct {
     unsigned int n_workers;
@@ -15,6 +21,7 @@ typedef struct {
     unsigned int max_files;
     char socket_path[PATH_MAX];
     char log_dir_path[PATH_MAX];
+    policy_t policy;
 } server_config_t;
 
 /** 
@@ -109,8 +116,10 @@ typedef struct {
     unsigned int n_readers;
     /** Number of writers who are now using this file. */
     unsigned int n_writers;
-    /** Time of last use to implement LRU. */
-    time_t last_use;
+    /** Time of creation to implement FIFO replacement algorithm. */
+    struct timespec creation_time;
+    /** Time of last use to implement LRU replacement algorithm. */
+    struct timespec last_use;
     /** Bool to decide if file currently can or cannot be expelled
      * by the LRU algorithm.
      */ 
@@ -307,7 +316,7 @@ void file_delete(file_t* file);
  *  - there are no files in the server,
  *  - somehow the files hashmap is NULL.
  */
-int expell_LRU(file_t** file_ptr);
+int expell_single_file(file_t** file_ptr);
 /**
  * Expells multiple files from the server until size_to_free bytes have been freed using a LRU algorithm.
  * Saves the pointers to the expelled files in expelled_list.
@@ -320,6 +329,6 @@ int expell_LRU(file_t** file_ptr);
  *  - there are no files in the server;
  *  - there is an allocation error, but in that case the process wil be aborted.
  */
-int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list);
+int expell_multiple_files(size_t size_to_free, list_t* expelled_list);
 
 #endif
