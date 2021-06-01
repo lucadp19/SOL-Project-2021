@@ -1,7 +1,9 @@
 #include "server.h"
 
+static int timespec_cmp(struct timespec *a, struct timespec *b);
+
 int expell_LRU(file_t** expelled_ptr){
-    time_t least_time = -1;
+    struct timespec* least_time;
     file_t* least_file = NULL;
     
     if(files->nelem == 0){
@@ -20,11 +22,11 @@ int expell_LRU(file_t** expelled_ptr){
 
         file_writer_lock(curr_file);
 
-        if(least_time == -1 || curr_file->last_use < least_time){
+        if(least_file == NULL || timespec_cmp(&(curr_file->last_use), least_time) < 0){
             if(least_file != NULL) file_writer_unlock(least_file);
 
             // updating times
-            least_time = curr_file->last_use;
+            least_time = &(curr_file->last_use);
             least_file = curr_file;
         } else { // this file won't be expelled (for now)
             file_writer_unlock(curr_file);
@@ -74,5 +76,13 @@ int expell_multiple_LRU(size_t size_to_free, list_t* expelled_list){
         freed = freed + expelled->size;
     }
 
+    return 0;
+}
+
+static int timespec_cmp(struct timespec* a, struct timespec* b){
+    if(a->tv_sec > b->tv_sec) return 1;
+    if(a->tv_sec < b->tv_sec) return -1;
+    if(a->tv_nsec > b->tv_nsec) return 1;
+    if(a->tv_nsec < b->tv_nsec) return -1;
     return 0;
 }

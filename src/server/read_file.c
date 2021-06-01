@@ -38,7 +38,12 @@ int read_file(int worker_no, long fd_client){
     }
 
     // updating time of last use
-    to_send->last_use = time(NULL);
+    if(clock_gettime(CLOCK_MONOTONIC, &(to_send->last_use)) == -1){
+        perror("Error in getting clock time");
+        fprintf(stderr, "Fatal error in getting clock time. Aborting.");
+        exit(EXIT_FAILURE);
+    }
+    // to_send->last_use = time(NULL);
 
     // unlocking general mutex (we don't need it anymore)
     safe_pthread_mutex_unlock(&files_mtx);

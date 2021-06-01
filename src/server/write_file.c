@@ -102,7 +102,12 @@ int write_file(int worker_no, long fd_client){
 
     file->size     = size;
     file->contents = buf;
-    file->last_use = time(NULL);
+    if(clock_gettime(CLOCK_MONOTONIC, &(file->last_use)) == -1){
+        perror("Error in getting clock time");
+        fprintf(stderr, "Fatal error in getting clock time. Aborting.");
+        exit(EXIT_FAILURE);
+    }
+    // file->last_use = time(NULL);
 
     safe_pthread_mutex_lock(&curr_state_mtx);
     curr_state.space += file->size;

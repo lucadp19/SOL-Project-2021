@@ -128,7 +128,12 @@ int open_file(int worker_no, long fd_client){
     // no error if client has already opened it
 
     // updating last use
-    file->last_use = time(NULL);
+    if(clock_gettime(CLOCK_MONOTONIC, &(file->last_use)) == -1){
+        perror("Error in getting clock time");
+        fprintf(stderr, "Fatal error in getting clock time. Aborting.");
+        exit(EXIT_FAILURE);
+    }
+    // file->last_use = time(NULL);
 
     // unlocking things
     file_writer_unlock(file);
@@ -183,7 +188,12 @@ static int create_file(file_t** file, char* pathname, long flags, long fd_client
     file_writer_lock(*file);
 
     // updating time of last use
-    (*file)->last_use = time(NULL);
+    if(clock_gettime(CLOCK_MONOTONIC, &((*file)->last_use)) == -1){
+        perror("Error in getting clock time");
+        fprintf(stderr, "Fatal error in getting clock time. Aborting.");
+        exit(EXIT_FAILURE);
+    }
+    // (*file)->last_use = time(NULL);
 
     return 0;
 }
