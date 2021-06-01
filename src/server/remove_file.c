@@ -27,9 +27,14 @@ int remove_file(int worker_no, long fd_client){
 
     safe_pthread_mutex_lock(&files_mtx);
     if(hashmap_get_by_key(files, pathname, (void**)&to_remove) == -1){ // file not present => success
-        safe_pthread_mutex_unlock(&files_mtx);
-        free(pathname);
-        return SA_SUCCESS;
+        if(errno == ENOENT) {
+            safe_pthread_mutex_unlock(&files_mtx);
+            free(pathname);
+            return SA_SUCCESS;
+        } else if (errno == EINVAL) { // files is NULL, abort
+            fprintf(stderr, "Hashmap of files is NULL, aborting.\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     file_writer_lock(to_remove);

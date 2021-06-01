@@ -27,9 +27,14 @@ int close_file(int worker_no, long fd_client){
     safe_pthread_mutex_lock(&files_mtx);
     // if file doesn't exist, error
     if(hashmap_get_by_key(files, pathname, (void**)&file) == -1){
-        free(pathname);
-        safe_pthread_mutex_unlock(&files_mtx);
-        return SA_NO_FILE;
+        if(errno == ENOENT){ // file doesn't exist
+            free(pathname);
+            safe_pthread_mutex_unlock(&files_mtx);
+            return SA_NO_FILE;
+        } else if (errno == EINVAL) { // files is NULL, abort
+            fprintf(stderr, "Hashmap of files is NULL, aborting.\n");
+            exit(EXIT_FAILURE);
+        }
     }
     // otherwise remove client
     file_writer_lock(file);

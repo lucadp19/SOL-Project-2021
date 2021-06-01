@@ -99,13 +99,16 @@ int open_file(int worker_no, long fd_client){
 
     file_t* file;
     if(hashmap_get_by_key(files, pathname, (void**)&file) == -1){
-        safe_pthread_mutex_unlock(&files_mtx);
-
-        free(pathname);
-        debug("File doesn't exist!\n");
-        return SA_NO_FILE;
-    } else debug("File exists!\n");
-
+        if(errno == ENOENT) { // file doesn't exist
+            safe_pthread_mutex_unlock(&files_mtx);
+            free(pathname);
+            return SA_NO_FILE;
+        } else if (errno == EINVAL) { // files is NULL, abort
+            fprintf(stderr, "Hashmap of files is NULL, aborting.\n");
+            exit(EXIT_FAILURE);
+        }
+    } 
+    
     debug("File path: %s\n", file->path_name);
 
     // locking file for writing operations

@@ -22,9 +22,14 @@ int read_file(int worker_no, long fd_client){
     file_t* to_send;
     safe_pthread_mutex_lock(&files_mtx);
     if( hashmap_get_by_key(files, pathname, (void**)&to_send) == -1 ){
-        safe_pthread_mutex_unlock(&files_mtx);
-        free(pathname);
-        return SA_NO_FILE;
+        if(errno == ENOENT){
+            safe_pthread_mutex_unlock(&files_mtx);
+            free(pathname);
+            return SA_NO_FILE;
+        } else if (errno == EINVAL) { // files is NULL, abort
+            fprintf(stderr, "Hashmap of files is NULL, aborting.\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     // locking file (in reader mode)

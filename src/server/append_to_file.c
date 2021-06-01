@@ -53,12 +53,17 @@ int append_to_file(int worker_no, long fd_client){
 
     if(size > 0){ // if size == 0 it's a waste of time
         safe_pthread_mutex_lock(&files_mtx);
-        if(hashmap_get_by_key(files, pathname, (void**)&file) == -1){ // file not present => success
-            safe_pthread_mutex_unlock(&files_mtx);
-            list_delete(&to_expell, files_node_cleaner);
-            free(pathname);
-            free(buf);
-            return SA_NO_FILE;
+        if(hashmap_get_by_key(files, pathname, (void**)&file) == -1){ 
+            if(errno == ENOENT) { // file not present
+                safe_pthread_mutex_unlock(&files_mtx);
+                list_delete(&to_expell, files_node_cleaner);
+                free(pathname);
+                free(buf);
+                return SA_NO_FILE;
+            } else if (errno == EINVAL) { // files is NULL, abort
+                fprintf(stderr, "Hashmap of files is NULL, aborting.\n");
+                exit(EXIT_FAILURE);
+            }
         }
 
         // locking file
