@@ -12,7 +12,7 @@ CLIENT=./bin/client
 echo -e "${GREEN}\t\t TEST 1: testing several client options\n"
 
 touch ${CONFIG}
-echo -e "no_worker=1\nsock_path=${SOCK_NAME}\nmax_files=10000\nmax_space=128\npath_dlog=logs" > ${CONFIG}
+echo -e "no_worker=1\nsock_path=${SOCK_NAME}\nmax_files=10000\nmax_space=128\npath_dlog=logs\ncache_pol=LRU" > ${CONFIG}
 
 echo -e "${GREEN}\n\t[CLIENT 0] Prints helper message.${NORMC}\n";
 ${CLIENT} -h
