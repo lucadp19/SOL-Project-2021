@@ -113,12 +113,12 @@ int hashmap_remove(hashmap_t* map, const char* key, const char** key_ptr, void**
             // is head?
             if(curr->prev != NULL)
                 curr->prev->next = curr->next;
-            else map->list[hash]->head = NULL;
+            else map->list[hash]->head = curr->next;
 
             // is tail?
             if(curr->next != NULL)
                 curr->next->prev = curr->prev;
-            else map->list[hash]->tail = NULL;
+            else map->list[hash]->tail = curr->prev;
 
             if(data_ptr != NULL)
                 *data_ptr = curr->data;

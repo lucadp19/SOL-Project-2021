@@ -117,11 +117,11 @@ int hashtbl_remove(hashtbl_t* table, long item){
             // is head?
             if(curr->prev != NULL)
                 curr->prev->next = curr->next;
-            else table->list[hash]->head = NULL;
+            else table->list[hash]->head = curr->next;
             // is tail?
             if(curr->next != NULL)
                 curr->next->prev = curr->prev;
-            else table->list[hash]->tail = NULL;
+            else table->list[hash]->tail = curr->prev;
 
             free(curr);
             table->list[hash]->nelem--;
