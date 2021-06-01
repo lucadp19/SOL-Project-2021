@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SOCK_NAME=socket
+SOCK_NAME=/tmp/LSO_socket.sk
 CONFIG=test2_config.txt
 POLICY=$1
 

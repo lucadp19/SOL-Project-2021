@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SOCK_NAME=socket
+SOCK_NAME=/tmp/LSO_socket.sk
 CONFIG=test1_config.txt
 
 GREEN="\033[0;32m"

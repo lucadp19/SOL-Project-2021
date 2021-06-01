@@ -1,9 +1,10 @@
-no_worker = 5
-max_space= 64
+no_worker = 1
+max_space= 128
 
-max_files =   20
+max_files =   10000
 
-sock_path     =     socket
+cache_pol=LRU
+sock_path     =     /tmp/LSO_socket.sk
 
 
 

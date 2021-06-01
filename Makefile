@@ -96,28 +96,14 @@ create_dirs:
 
 .PHONY: clean
 clean: cleanTests
-	@echo "Removing object files and executables..."
+	@echo "Removing object files, libraries, logs and executables..."
 	@rm -f vgcore.*
 	@rm -rf $(OBJ_DIR)/*
 	@rm -rf $(BIN_DIR)/*
+	@rm -rf $(LIB_DIR)/*
 	@rm -rf $(LOG_DIR)/*
+	@rm -f /tmp/LSO_socket.sk
 	@echo "Cleaning complete!"
-
-# ---------------- Personal Tests ---------------- 	#
-.PHONY: list_test hashtable_test
-
-PTEST_DEPS := $(LIB_DIR)/libutil.so
-PTEST_LIBS := $(DYN_LINK) -lutil
-
-hashtable_test : $(BIN_DIR)/hashtable_test
-
-$(BIN_DIR)/hashtable_test : $(TEST_DIR)/hashtable_test.c $(LIB_DIR)/libutil.so
-	$(CC) $(CFLAGS) $(PTEST_LIBS) $< -o $@
-
-list_test: $(BIN_DIR)/list_test
-
-$(BIN_DIR)/list_test: $(TEST_DIR)/list_test.c $(LIB_DIR)/libutil.so
-	$(CC) $(CFLAGS) $(PTEST_LIBS) $< -o $@
 
 # ---------------- Official Tests ----------------	#
 .PHONY : test1 test2
