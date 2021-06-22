@@ -67,3 +67,12 @@ vgcore.*
 
 # fuse_hidden files
 .fuse_hidden*
+
+# latex files
+*.aux
+*_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+_minted*
